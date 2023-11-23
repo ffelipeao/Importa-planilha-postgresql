@@ -75,7 +75,7 @@ def gerar_sql(file_list,nome_schema):
             insert_sql = insert_sql.rstrip(',\n') + ';'
 
             # Crie o arquivo SQL com codificação utf-8
-            with open(f'{nome_tabela}.sql', 'w', encoding='utf-8') as sql_file:
+            with open(f'sql/{nome_tabela}.sql', 'w', encoding='utf-8') as sql_file:
                 sql_file.write(create_sql + '\n')
                 sql_file.write(insert_sql)
 
