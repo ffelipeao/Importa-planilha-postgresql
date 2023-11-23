@@ -3,7 +3,7 @@ import pandas as pd
 import psycopg2
 import tkinter as tk
 from tkinter import filedialog
-from decouple import config
+from dotenv import load_dotenv
 import re
 
 def criar_tabela_postgresql_com_nome_arquivo(nome_arquivo_xlsx, db_params):
@@ -43,14 +43,17 @@ def criar_tabela_postgresql_com_nome_arquivo(nome_arquivo_xlsx, db_params):
     except Exception as e:
         return f"Erro ao criar a tabela: {str(e)}"
 
+# Carregar variáveis de ambiente a partir do arquivo .env
+load_dotenv()
 
+# Usar as variáveis de ambiente
 # Leia as informações de conexão do arquivo .env
 db_params = {
-    'dbname': config('DB_NAME', default='seu_banco_de_dados'),
-    'user': config('DB_USER', default='seu_usuario'),
-    'password': config('DB_PASSWORD', default='sua_senha'),
-    'host': config('DB_HOST', default='localhost'),
-    'port': config('DB_PORT', default='5432')
+    'dbname': os.getenv('DB_NAME', default='seu_banco_de_dados'),
+    'user': os.getenv('DB_USER', default='seu_usuario'),
+    'password': os.getenv('DB_PASSWORD', default='sua_senha'),
+    'host': os.getenv('DB_HOST', default='localhost'),
+    'port': os.getenv('DB_PORT', default='5432')
 }
 
 # Crie uma janela de diálogo para selecionar o arquivo XLSX
