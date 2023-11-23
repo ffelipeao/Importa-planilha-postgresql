@@ -3,7 +3,21 @@ import pandas as pd
 import tkinter as tk
 from tkinter import filedialog
 import re
+import chardet
+import unidecode
 
+def format_file_name(file_name):
+    # Remover acentos e caracteres especiais
+    formatted_name = unidecode.unidecode(file_name)
+    # Substituir espaços por underscores (ou outro caractere desejado)
+    formatted_name = formatted_name.replace(' ', '_')
+    return formatted_name
+
+def detectar_codificacao(arquivo):
+    with open(arquivo, 'rb') as f:
+        dados = f.read()
+        resultado = chardet.detect(dados)
+        return resultado['encoding']
 
 # Função para tratar os dados
 def tratar_dado(dado):
@@ -16,54 +30,71 @@ def tratar_dado(dado):
     return dado_tratado
 
 
-def gerar_sql(nome_arquivo_xlsx):
-    try:
-        # Leia o arquivo XLSX usando o Pandas
-        df = pd.read_excel(nome_arquivo_xlsx)
+def gerar_sql(file_list,nome_schema):
+    for nome_arquivo in file_list:
+        try:
+            # Detectar a codificação do arquivo
+            codificacao = detectar_codificacao(nome_arquivo)
+            # Fixar codificacao (utf-8, iso-8859-1 (Latin-1), windows-1252)
+            #codificacao = 'iso-8859-1'
 
-        # Remova valores NaN do DataFrame
-        #df = df.dropna()
+            # Determinar o tipo de arquivo usando a extensão
+            extensao = os.path.splitext(nome_arquivo)[1]
+            # Ler o arquivo usando Pandas e converter para UTF-8
+            if extensao.lower() == '.xlsx':
+                df = pd.read_excel(nome_arquivo, engine='openpyxl')
+            elif extensao.lower() == '.csv':
+                df = pd.read_csv(nome_arquivo, encoding=codificacao, delimiter=';')
 
-        # Extraia o nome do arquivo (sem a extensão) para usar como nome da tabela
-        nome_arquivo_base = os.path.basename(nome_arquivo_xlsx)
-        nome_tabela = nome_arquivo_base.split('.')[0]
+            else:
+                print("Formato de arquivo não suportado.")
+                exit()
 
-        # Substitua caracteres não-alfabéticos nos nomes das colunas
-        df.columns = [re.sub(r'[^a-zA-Z0-9]', '', col) for col in df.columns]
+            # Remova valores NaN do DataFrame
+            # df = df.dropna()
 
-        # Crie uma string com a instrução SQL CREATE
-        create_sql = f"CREATE TABLE {nome_tabela} ({', '.join([f'{col} text' for col in df.columns])});"
+            # Extrair o nome do arquivo (sem a extensão) para usar como nome da tabela
+            nome_arquivo_base = os.path.basename(nome_arquivo)
+            nome_tabela = nome_arquivo_base.rsplit('.', 1)[0].lower()
+            nome_tabela_formatado = format_file_name(nome_tabela)
 
-        # Crie uma string com as instruções SQL INSERT
-        insert_sql = f"INSERT INTO {nome_tabela} ({', '.join(df.columns)}) VALUES\n"
+            # Substitua caracteres não-alfabéticos nos nomes das colunas e converta para minúsculas
+            df.columns = [re.sub(r'[^a-zA-Z0-9_]', '', col).lower() for col in df.columns]
 
-        for index, row in df.iterrows():
-            values = ', '.join([f"'{tratar_dado(value)}'" if not pd.isna(value) else 'NULL' for value in row])
-            insert_sql += f"({values}),\n"
+            # Crie uma string com a instrução SQL CREATE
+            create_sql = f"CREATE TABLE {nome_schema}.\"{nome_tabela_formatado}\" ({', '.join([f'{col} text' for col in df.columns])});"
 
-        # Remova a vírgula extra no final
-        insert_sql = insert_sql.rstrip(',\n') + ';'
+            # Crie uma string com as instruções SQL INSERT
+            insert_sql = f"INSERT INTO {nome_schema}.\"{nome_tabela_formatado}\" ({', '.join(df.columns)}) VALUES\n"
 
-        # Crie o arquivo SQL com codificação utf-8
-        with open(f'{nome_tabela}.sql', 'w', encoding='utf-8') as sql_file:
-            sql_file.write(create_sql + '\n')
-            sql_file.write(insert_sql)
+            for index, row in df.iterrows():
+                values = ', '.join([f"'{tratar_dado(value)}'" if not pd.isna(value) else 'NULL' for value in row])
+                insert_sql += f"({values}),\n"
 
-        return f'Arquivo SQL "{nome_tabela}.sql" criado com sucesso.'
-    except Exception as e:
-        return f'Erro ao criar o arquivo SQL: {str(e)}'
+            # Remova a vírgula extra no final
+            insert_sql = insert_sql.rstrip(',\n') + ';'
+
+            # Crie o arquivo SQL com codificação utf-8
+            with open(f'{nome_tabela}.sql', 'w', encoding='utf-8') as sql_file:
+                sql_file.write(create_sql + '\n')
+                sql_file.write(insert_sql)
+
+            print(f'SQL file "{nome_tabela}.sql" successfully created for {nome_arquivo}.')
+        except Exception as e:
+            print(f'Erro ao criar o arquivo SQL:', e)
 
 
-# Crie uma janela de diálogo para selecionar o arquivo XLSX
+# Crie uma janela de diálogo para selecionar o arquivo
 root = tk.Tk()
 root.withdraw()  # Ocultar a janela principal
-nome_arquivo_xlsx = filedialog.askopenfilename(filetypes=[("Arquivos XLSX", "*.xlsx")])
+file_list = filedialog.askopenfilenames(filetypes=[("Supported Files", "*.xlsx;*.csv"),])
 
-if nome_arquivo_xlsx:
+if file_list:
+    nome_schema = input("Informe o nome do Schema: ")
+    # print(nome_schema)
+
     # Chame a função para gerar o arquivo SQL
-    resultado = gerar_sql(nome_arquivo_xlsx)
+    gerar_sql(list(file_list),nome_schema)
 
-    # Exiba o resultado
-    print(resultado)
 else:
     print("Nenhum arquivo selecionado.")

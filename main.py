@@ -4,44 +4,54 @@ import psycopg2
 import tkinter as tk
 from tkinter import filedialog
 from dotenv import load_dotenv
+
 import re
 
-def criar_tabela_postgresql_com_nome_arquivo(nome_arquivo_xlsx, db_params):
+def criar_tabela_postgresql_com_nome_arquivo(nome_arquivo, db_params):
     try:
-        # Leia o arquivo XLSX usando o Pandas
-        df = pd.read_excel(nome_arquivo_xlsx)
+        # Determinar o tipo de arquivo usando a extensão
+        extensao = os.path.splitext(nome_arquivo)[1]
 
-        # Extraia o nome do arquivo (sem a extensão) para usar como nome da tabela
-        nome_arquivo_base = os.path.basename(nome_arquivo_xlsx)
+        # Ler o arquivo usando Pandas dependendo do tipo
+        if extensao.lower() == '.xlsx':
+            df = pd.read_excel(nome_arquivo)
+        elif extensao.lower() == '.csv':
+            df = pd.read_csv(nome_arquivo)
+        else:
+            return "Formato de arquivo não suportado."
+
+        # Extrair o nome do arquivo (sem a extensão) para usar como nome da tabela
+        nome_arquivo_base = os.path.basename(nome_arquivo)
         nome_tabela = nome_arquivo_base.split('.')[0]
 
-        # Substitua caracteres não-alfabéticos nos nomes das colunas
+        # Substituir caracteres não-alfabéticos nos nomes das colunas
         df.columns = [re.sub(r'[^a-zA-Z0-9]', '', col) for col in df.columns]
 
-        # Crie uma string com a instrução SQL CREATE
+        # Criar uma string com a instrução SQL CREATE
         create_sql = f"CREATE TABLE {nome_tabela} ({', '.join([f'{col} text' for col in df.columns])})"
 
-        # Imprima a instrução SQL CREATE na tela
+        # Imprimir a instrução SQL CREATE na tela
         print("Instrução SQL CREATE:")
         print(create_sql)
 
-        # Conecte-se ao banco de dados PostgreSQL
+        # Conectar ao banco de dados PostgreSQL
         conn = psycopg2.connect(**db_params)
         cur = conn.cursor()
 
-        # Crie uma tabela no PostgreSQL com os mesmos nomes das colunas no DataFrame
+        # Criar uma tabela no PostgreSQL com os mesmos nomes das colunas no DataFrame
         cur.execute(create_sql)
         conn.commit()
 
-        # Insira os dados do DataFrame na tabela do PostgreSQL
+        # Inserir os dados do DataFrame na tabela do PostgreSQL
         df.to_sql(nome_tabela, conn, if_exists='replace', index=False)
 
-        # Feche a conexão com o banco de dados
+        # Fechar a conexão com o banco de dados
         conn.close()
 
         return f"Tabela '{nome_tabela}' criada com sucesso no PostgreSQL."
     except Exception as e:
         return f"Erro ao criar a tabela: {str(e)}"
+
 
 # Carregar variáveis de ambiente a partir do arquivo .env
 load_dotenv()
@@ -56,16 +66,16 @@ db_params = {
     'port': os.getenv('DB_PORT', default='5432')
 }
 
-# Crie uma janela de diálogo para selecionar o arquivo XLSX
+# Criar uma janela de diálogo para selecionar o arquivo
 root = tk.Tk()
 root.withdraw()  # Ocultar a janela principal
-nome_arquivo_xlsx = filedialog.askopenfilename(filetypes=[("Arquivos XLSX", "*.xlsx")])
+nome_arquivo = filedialog.askopenfilename(filetypes=[("Arquivos XLSX", "*.xlsx"), ("Arquivos CSV", "*.csv")])
 
-if nome_arquivo_xlsx:
-    # Chame a função para criar a tabela no PostgreSQL
-    resultado = criar_tabela_postgresql_com_nome_arquivo(nome_arquivo_xlsx, db_params)
+if nome_arquivo:
+    # Chamar a função para criar a tabela no PostgreSQL
+    resultado = criar_tabela_postgresql_com_nome_arquivo(nome_arquivo, db_params)
 
-    # Exiba o resultado
+    # Exibir o resultado
     print(resultado)
 else:
     print("Nenhum arquivo selecionado.")
