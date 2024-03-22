@@ -68,12 +68,18 @@ def gerar_sql(file_list,nome_schema):
             print('Gerando INSERT com os dados...')
             # Crie uma string com as instruções SQL INSERT
             insert_sql = f"INSERT INTO {nome_schema}.\"{nome_tabela_formatado}\" ({', '.join(df.columns)}) VALUES\n"
+
+            total_linhas = df.shape[0]
+            print("Total de linhas no DataFrame:", total_linhas)
+
             conta = 0
             for index, row in df.iterrows():
                 conta += 1
                 if conta % 25000 == 0:
+                    # Supondo que 'conta' seja o número de linhas processadas e 'total_linhas' seja o número total de linhas no DataFrame
+                    porcentagem = (conta / total_linhas) * 100
                     current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    print('Data e hora:', current_datetime, '| Linhas processadas:', conta)
+                    print('Data e hora:', current_datetime, '| Linhas processadas:', conta, ' - ', porcentagem, "%")
 
                 values = ', '.join([f"'{tratar_dado(value)}'" if not pd.isna(value) else 'NULL' for value in row])
                 insert_sql += f"({values}),\n"
