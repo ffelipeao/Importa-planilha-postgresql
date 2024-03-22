@@ -93,7 +93,7 @@ def gerar_sql(file_list,nome_schema):
                 sql_file.write(create_sql + '\n')
                 sql_file.write(insert_sql)
 
-            print(f'SQL file "{nome_tabela}.sql" successfully created for {nome_arquivo}.')
+            print(f'O arquvo SQL "{nome_tabela}.sql" foi criado com sucesso para {nome_arquivo}.')
         except Exception as e:
             print(f'Erro ao criar o arquivo SQL:', e)
 
