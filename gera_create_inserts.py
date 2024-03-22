@@ -87,6 +87,7 @@ def gerar_sql(file_list,nome_schema):
             # Remova a vírgula extra no final
             insert_sql = insert_sql.rstrip(',\n') + ';'
 
+            print("Escrevendo arquivo .sql")
             # Crie o arquivo SQL com codificação utf-8
             with open(f'sql/{nome_tabela}.sql', 'w', encoding='utf-8') as sql_file:
                 sql_file.write(create_sql + '\n')
