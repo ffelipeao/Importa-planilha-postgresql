@@ -77,7 +77,7 @@ def gerar_sql(file_list,nome_schema):
                 conta += 1
                 if conta % 25000 == 0:
                     # Supondo que 'conta' seja o número de linhas processadas e 'total_linhas' seja o número total de linhas no DataFrame
-                    porcentagem = (conta / total_linhas) * 100
+                    porcentagem = round((conta / total_linhas) * 100, 2)
                     current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     print('Data e hora:', current_datetime, '| Linhas processadas:', conta, ' - ', porcentagem, "%")
 
