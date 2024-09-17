@@ -37,7 +37,19 @@ def gerar_sql(file_list,nome_schema):
             # Detectar a codificação do arquivo
             # codificacao = detectar_codificacao(nome_arquivo)
             # Fixar codificacao (utf-8, iso-8859-1 (Latin-1), windows-1252)
-            codificacao = 'iso-8859-1'
+            # codificacao = 'iso-8859-1'
+            codific = input("Informe a codificacao (Ex.: 1- utf-8;  2- iso-8859-1 (Latin-1); 3- windows-1252): ")
+
+            if codific == '1':
+                codificacao = 'utf-8'
+            elif codific == '2':
+                codificacao = 'iso-8859-1'
+            elif codific == '3':
+                codificacao = 'windows-1252'
+            else:
+                codificacao = codific
+            print('Codificação selecionada:', codificacao)
+
             print('Carregando dados na memória (df).')
             # Determinar o tipo de arquivo usando a extensão
             extensao = os.path.splitext(nome_arquivo)[1]
@@ -45,8 +57,7 @@ def gerar_sql(file_list,nome_schema):
             if extensao.lower() == '.xlsx':
                 df = pd.read_excel(nome_arquivo, engine='openpyxl')
             elif extensao.lower() == '.csv':
-                df = pd.read_csv(nome_arquivo, encoding=codificacao, delimiter=';')
-
+                df = pd.read_csv(nome_arquivo, encoding=codificacao, delimiter=';', low_memory=False)
             else:
                 print("Formato de arquivo não suportado.")
                 exit()
@@ -63,11 +74,17 @@ def gerar_sql(file_list,nome_schema):
             df.columns = [re.sub(r'[^a-zA-Z0-9_]', '', col).lower() for col in df.columns]
             print('Gerando CREATE TABLE...')
             # Crie uma string com a instrução SQL CREATE
-            create_sql = f"CREATE TABLE {nome_schema}.\"{nome_tabela_formatado}\" ({', '.join([f'{col} text' for col in df.columns])});"
+            #create_sql = f"CREATE TABLE {nome_schema}.\"{nome_tabela_formatado}\" ({', '.join([f'{col} text' for col in df.columns])});"
+            # Crie uma string com a instrução SQL CREATE
+            create_sql = f"CREATE TABLE {nome_schema}.\"{nome_tabela_formatado}\" (" \
+                         + ', '.join([f'\"{col}\" text' for col in df.columns]) + ");"
 
             print('Gerando INSERT com os dados...')
             # Crie uma string com as instruções SQL INSERT
-            insert_sql = f"INSERT INTO {nome_schema}.\"{nome_tabela_formatado}\" ({', '.join(df.columns)}) VALUES\n"
+            #insert_sql = f"INSERT INTO {nome_schema}.\"{nome_tabela_formatado}\" ({', '.join(df.columns)}) VALUES\n"
+            # Crie uma string com as instruções SQL INSERT
+            insert_sql = f"INSERT INTO {nome_schema}.\"{nome_tabela_formatado}\" (" \
+                         + ', '.join([f'\"{col}\"' for col in df.columns]) + ") VALUES\n"
 
             total_linhas = df.shape[0]
             print("Total de linhas no DataFrame:", total_linhas)
@@ -107,8 +124,10 @@ if __name__ == "__main__":
     file_list = filedialog.askopenfilenames(filetypes=[("Supported Files", "*.xlsx;*.csv"),])
 
     if file_list:
-        nome_schema = input("Informe o nome do Schema: ")
+        # nome_schema = input("Informe o nome do Schema: ")
+        nome_schema = 'dados_gts'
         print('Gerando dados para o schema:', nome_schema)
+
 
         # Chame a função para gerar o arquivo SQL
         gerar_sql(list(file_list),nome_schema)
