@@ -14,8 +14,8 @@ dados_transpostos = {}
 for nome_aba, df in dados_abas.items():
     # Pula abas que estavam ocultas no docomentos e não precisam ser transportas.
     if nome_aba == 'Cronograma' or nome_aba == 'Planilha1':
-        continue
-
+         continue
+    #
     # Remover a primeira coluna
     df = df.iloc[:, 1:]
 

@@ -1,22 +1,20 @@
 import os
-import psycopg2
-from dotenv import load_dotenv
+from conexao import ConexaoBanco
 from tkinter import filedialog, Tk
 import datetime
 
-def execute_sql_file(file_path, db_params):
+def execute_sql_file(file_path):
     try:
-        conn = psycopg2.connect(**db_params)
-        cursor = conn.cursor()
-
+        conexao = ConexaoBanco().conectar()
+        cursor = conexao.cursor()
         with open(file_path, 'r', encoding='utf-8') as sql_file:
             sql = sql_file.read()
 
         cursor.execute(sql)
-        conn.commit()
+        conexao.commit()
 
         cursor.close()
-        conn.close()
+        conexao.close()
 
         print(f'Dados do arquivo {file_path} inseridos no banco de dados com sucesso.')
     except Exception as e:
@@ -34,21 +32,9 @@ if __name__ == "__main__":
     arquivos_sql = filedialog.askopenfilenames(filetypes=[("Arquivos SQL", "*.sql")])
 
     if arquivos_sql:
-        # Carregar variáveis de ambiente a partir do arquivo .env
-        load_dotenv()
-
-        # Usar as variáveis de ambiente
-        db_params = {
-            'dbname': os.getenv('DB_NAME', default='seu_banco_de_dados'),
-            'user': os.getenv('DB_USER', default='seu_usuario'),
-            'password': os.getenv('DB_PASSWORD', default='sua_senha'),
-            'host': os.getenv('DB_HOST', default='localhost'),
-            'port': os.getenv('DB_PORT', default='5432')
-        }
-
         for arquivo_sql in arquivos_sql:
             print('Inserindo dados pelo arquivo:', arquivo_sql)
-            execute_sql_file(arquivo_sql, db_params)
+            execute_sql_file(arquivo_sql)
     else:
         print('Nenhum arquivo SQL selecionado.')
 

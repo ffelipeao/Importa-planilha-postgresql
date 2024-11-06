@@ -38,8 +38,8 @@ def gerar_sql(file_list,nome_schema):
             # codificacao = detectar_codificacao(nome_arquivo)
             # Fixar codificacao (utf-8, iso-8859-1 (Latin-1), windows-1252)
             # codificacao = 'iso-8859-1'
-            codific = input("Informe a codificacao (Ex.: 1- utf-8;  2- iso-8859-1 (Latin-1); 3- windows-1252): ")
-
+            # codific = input("Informe a codificacao (Ex.: 1- utf-8;  2- iso-8859-1 (Latin-1); 3- windows-1252): ")
+            codific = '1'
             if codific == '1':
                 codificacao = 'utf-8'
             elif codific == '2':
@@ -126,6 +126,7 @@ if __name__ == "__main__":
     if file_list:
         # nome_schema = input("Informe o nome do Schema: ")
         nome_schema = 'dados_gts'
+        gt = 'espeleo_'
         print('Gerando dados para o schema:', nome_schema)
 
 
