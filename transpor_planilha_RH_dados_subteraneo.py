@@ -4,6 +4,16 @@ from tkinter import Tk
 from tkinter.filedialog import askopenfilenames, askdirectory
 from openpyxl import load_workbook
 
+""""
+    Felipe Alves - 20241105
+    Criado para peparar os dados do GT de Recursos Hídricos.
+
+    O script faz a leitura de cada página(guia) da planilhas, transpoem e junta todas as guias na planilha só de saida.
+    As colunas 0, 2, 3 não estão sendo lidas - já que são valores de referência e serão tratados separadamente.
+
+    Entrada: Permite a seleção de varias planilhas no mesmo formato.
+    Saída: Para cada planilha lida gera uma nova com páginas unidas transpostas.
+"""
 
 # Função para tornar nomes de colunas únicos
 def make_unique_columns(columns):
@@ -31,7 +41,14 @@ if not arquivos_excel:
     exit()
 
 # Selecionar a pasta de saída (onde os arquivos transpostos serão salvos)
-pasta_saida = askdirectory(title="Selecione a pasta de saída")
+# pasta_saida = askdirectory(title="Selecione a pasta de saída")
+
+# Obter o diretório dos arquivos selecionados
+diretorio_base = os.path.dirname(arquivos_excel[0])
+
+# Criar a pasta de saída chamada 'Dados_transpostos' no mesmo diretório
+pasta_saida = os.path.join(diretorio_base, "Dados_transpostos")
+os.makedirs(pasta_saida, exist_ok=True)
 
 # Verificar se o usuário selecionou uma pasta de saída
 if not pasta_saida:
@@ -47,8 +64,8 @@ for caminho_arquivo in arquivos_excel:
     arquivo_excel = os.path.basename(caminho_arquivo)
     print(f"Processando o arquivo: {arquivo_excel}")
 
-    # Carregar todas as abas em um dicionário, pulando as primeiras 8 linhas
-    dados_abas = pd.read_excel(caminho_arquivo, sheet_name=None, skiprows=6)
+    # Carregar todas as abas em um dicionário, pulando as primeiras 10 linhas
+    dados_abas = pd.read_excel(caminho_arquivo, sheet_name=None, skiprows=9)
 
     # Lista para armazenar os DataFrames transpostos
     dados_transpostos_lista = []
@@ -64,14 +81,9 @@ for caminho_arquivo in arquivos_excel:
         # Acessar a aba com openpyxl
         aba = wb[nome_aba]
 
-        # Remover as colunas 1, 3, 4 e 5 antes de transpor
-        colunas_a_remover = [0, 2, 3, 4]
+        # Remover as colunas 1, 3 e 4 antes de transpor
+        colunas_a_remover = [0, 2, 3]
         df = df.drop(df.columns[colunas_a_remover], axis=1, errors='ignore')
-
-        # Ignorar colunas ocultas
-        df = df.loc[:, ~df.columns.isin([col for idx, col in enumerate(df.columns) if
-                                         aba.column_dimensions.get(chr(65 + idx)) is not None and aba.column_dimensions[
-                                             chr(65 + idx)].hidden])]
 
         # Transpor o DataFrame
         df_transposto = df.T
@@ -96,11 +108,22 @@ for caminho_arquivo in arquivos_excel:
         # Adicionar o DataFrame transposto à lista
         dados_transpostos_lista.append(df_transposto)
 
+    # # Resetando o índice para todos os DataFrames na lista antes de concatenar
+    # dados_transpostos_lista = [df.reset_index(drop=True) for df in dados_transpostos_lista]
+    #
+    # print(df.index.duplicated())  # Verifica quantos índices duplicados existem
+    # print(df.index.duplicated().sum())  # Verifica quantos índices duplicados existem
+    # # exit()
+
     # Combinar todos os DataFrames transpostos em um único DataFrame
     df_combined = pd.concat(dados_transpostos_lista, ignore_index=True, sort=False)
 
+    # trabalha o nome do arquivo de saida.
+    part_n = arquivo_excel.split('.')
+    nome_arquivo_saida = part_n[0] + '_transposto.' + part_n[1]
+
     # Salvar o DataFrame combinado em um novo arquivo Excel na pasta de saída
-    caminho_saida_arquivo = os.path.join(pasta_saida, arquivo_excel)
+    caminho_saida_arquivo = os.path.join(pasta_saida, nome_arquivo_saida)
     df_combined.to_excel(caminho_saida_arquivo, index=False)
 
     print(f"Arquivo '{caminho_saida_arquivo}' salvo com sucesso!")

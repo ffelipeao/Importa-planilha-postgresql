@@ -3,6 +3,20 @@ import os
 from tkinter import Tk
 from tkinter.filedialog import askopenfilenames, askdirectory
 
+""""
+    Felipe Alves - 20241105
+    Criado para peparar os dadado do GT de Recursos Hídricos.
+    
+    O script junta as planilhas com apenas uma página e que já estão transpostas na forma vertical 
+    Pode ser configurada para pular as linhas com valides de referencia
+        Para pular a leitura das linhas 2 e 3 com o atributo (skiprows=[1, 2] - linha 66) - valores de referencia - tratados separadamente.
+    
+    Entrada: Permite a seleção de varias planilhas no mesmo formato.
+    Saída: Uma unica planilha com os dados unidos.
+"""
+
+
+
 # Função para tornar nomes de colunas únicos
 def make_unique_columns(columns):
     counts = {}
@@ -48,8 +62,8 @@ for caminho_arquivo in arquivos_excel:
     print(f"Processando o arquivo: {arquivo_excel}")
 
     # Carregar a primeira aba do arquivo Excel, pulando as linhas 2 e 3 (índices 1 e 2)
-    # Remover "skiprows=[1, 2]" caso queira pegar todas as linhas
-    dados_aba = pd.read_excel(caminho_arquivo, sheet_name=0, skiprows=[1, 2])
+    # Remover "skiprows=[1, 2]" caso queira manter todas as linhas
+    dados_aba = pd.read_excel(caminho_arquivo, sheet_name=0)
 
     # Tornar os nomes das colunas únicos
     dados_aba.columns = make_unique_columns(dados_aba.columns)
@@ -61,7 +75,7 @@ for caminho_arquivo in arquivos_excel:
     df_combined = pd.concat([df_combined, dados_aba], ignore_index=True, sort=False)
 
 # # Ordenar as colunas pelo nome
-# df_combined = df_combined.sort_index(axis=1)
+df_combined = df_combined.sort_index(axis=1)
 
 # Salvar o DataFrame combinado em um novo arquivo Excel na pasta de saída
 caminho_saida_arquivo = os.path.join(pasta_saida, "dados_combinados.xlsx")
