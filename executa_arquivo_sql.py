@@ -28,8 +28,14 @@ if __name__ == "__main__":
     root = Tk()
     root.withdraw()
 
+    # Define o caminho inicial para a janela de seleção de arquivos
+    caminho_inicial = "sql"
+
     # Abra a janela de seleção de arquivo para escolher os arquivos .sql
-    arquivos_sql = filedialog.askopenfilenames(filetypes=[("Arquivos SQL", "*.sql")])
+    arquivos_sql = filedialog.askopenfilenames(
+        filetypes=[("Arquivos SQL", "*.sql")],
+        initialdir=caminho_inicial  # Define o diretório inicial
+    )
 
     if arquivos_sql:
         for arquivo_sql in arquivos_sql:

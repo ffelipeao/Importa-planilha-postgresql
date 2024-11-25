@@ -29,3 +29,24 @@ class ConexaoBanco:
         except psycopg2.Error as e:
             print("Erro ao conectar:", e)
             return None
+
+    def execute_query(self, conexao, query, parametros=None):
+        try:
+            cursor = conexao.cursor()
+            # Executando a query com os parâmetros passados
+            cursor.execute(query, parametros)
+            # Se for uma consulta SELECT, obtém os resultados
+            if query.strip().upper().startswith("SELECT"):
+                # print('Executando SELECT')
+                resultados = cursor.fetchall()  # Obtém todos os resultados
+                return resultados
+            else:
+                # Se não for SELECT, faz commit da transação (INSERT, UPDATE, DELETE)
+                conexao.commit()
+                return True
+        except Exception as e:
+            msg = f"Erro Query: {e}"
+            print(msg)
+            return False
+        finally:
+            cursor.close()  # Garantir que o cursor seja fechado após o uso

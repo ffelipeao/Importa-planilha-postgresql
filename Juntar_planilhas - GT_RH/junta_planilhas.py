@@ -1,5 +1,7 @@
 import pandas as pd
 import os
+import re
+import unidecode
 from tkinter import Tk
 from tkinter.filedialog import askopenfilenames, askdirectory
 
@@ -8,14 +10,19 @@ from tkinter.filedialog import askopenfilenames, askdirectory
     Criado para peparar os dadado do GT de Recursos Hídricos.
     
     O script junta as planilhas com apenas uma página e que já estão transpostas na forma vertical 
-    Pode ser configurada para pular as linhas com valides de referencia
+    Pode ser configurada para pular as linhas com valores de referencia
         Para pular a leitura das linhas 2 e 3 com o atributo (skiprows=[1, 2] - linha 66) - valores de referencia - tratados separadamente.
     
     Entrada: Permite a seleção de varias planilhas no mesmo formato.
     Saída: Uma unica planilha com os dados unidos.
 """
 
-
+def format_file_name(file_name):
+    # Remover acentos e caracteres especiais
+    formatted_name = unidecode.unidecode(file_name).strip()
+    # Substituir espaços por underscores (ou outro caractere desejado)
+    formatted_name = formatted_name.replace(' ', '_')
+    return formatted_name
 
 # Função para tornar nomes de colunas únicos
 def make_unique_columns(columns):
@@ -65,11 +72,16 @@ for caminho_arquivo in arquivos_excel:
     # Remover "skiprows=[1, 2]" caso queira manter todas as linhas
     dados_aba = pd.read_excel(caminho_arquivo, sheet_name=0)
 
+    # Substitua caracteres não-alfabéticos nos nomes das colunas e converta para minúsculas
+    dados_aba.columns  = [re.sub(r'[^a-zA-Z0-9_]', '', format_file_name(col)).lower() for col in dados_aba.columns ]
+
     # Tornar os nomes das colunas únicos
     dados_aba.columns = make_unique_columns(dados_aba.columns)
 
+
+
     # Adicionar coluna com o nome do arquivo
-    dados_aba['nome_arquivo_origem'] = arquivo_excel
+    # dados_aba['nome_arquivo_origem'] = arquivo_excel
 
     # Adicionar os dados da aba ao DataFrame combinado
     df_combined = pd.concat([df_combined, dados_aba], ignore_index=True, sort=False)

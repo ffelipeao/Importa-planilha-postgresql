@@ -8,7 +8,7 @@ import unidecode
 import datetime
 def format_file_name(file_name):
     # Remover acentos e caracteres especiais
-    formatted_name = unidecode.unidecode(file_name)
+    formatted_name = unidecode.unidecode(file_name).strip()
     # Substituir espaços por underscores (ou outro caractere desejado)
     formatted_name = formatted_name.replace(' ', '_')
     return formatted_name
@@ -71,7 +71,7 @@ def gerar_sql(file_list,nome_schema):
             nome_tabela_formatado = format_file_name(nome_tabela)
 
             # Substitua caracteres não-alfabéticos nos nomes das colunas e converta para minúsculas
-            df.columns = [re.sub(r'[^a-zA-Z0-9_]', '', col).lower() for col in df.columns]
+            df.columns = [re.sub(r'[^a-zA-Z0-9_]', '', format_file_name(col)).lower() for col in df.columns]
             print('Gerando CREATE TABLE...')
             # Crie uma string com a instrução SQL CREATE
             #create_sql = f"CREATE TABLE {nome_schema}.\"{nome_tabela_formatado}\" ({', '.join([f'{col} text' for col in df.columns])});"
@@ -126,7 +126,6 @@ if __name__ == "__main__":
     if file_list:
         # nome_schema = input("Informe o nome do Schema: ")
         nome_schema = 'dados_gts'
-        gt = 'espeleo_'
         print('Gerando dados para o schema:', nome_schema)
 
 
