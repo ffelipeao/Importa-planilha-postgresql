@@ -54,6 +54,7 @@ def tratar_dado(dado):
 
 
 def gerar_sql(file_list,nome_schema):
+
     for nome_arquivo in file_list:
         try:
             print('Preparando dados do arquivo:', nome_arquivo)
@@ -134,7 +135,16 @@ def gerar_sql(file_list,nome_schema):
                 sql_file.write(insert_sql)
 
             print(f'O arquvo SQL "{nome_tabela}.sql" foi criado com sucesso para {nome_arquivo}.')
-            return nome_tabela+".sql"
+
+            print('###' * 50)
+            print('###' * 15, "Inserindo no Banco de dados", '###' * 15)
+            print('    Executando script sql: ', nome_tabela+'.sql')
+            if execute_sql_file('sql/' + nome_tabela+'.sql'):
+                print(f'    Inserido com Sucesso!')
+            else:
+                print(f'    Erro ao inserir os dados do arquivo sql/{nome_tabela}.sql ')
+            print('###' * 50)
+
         except Exception as e:
             print(f'Erro ao criar o arquivo SQL:', e)
 
@@ -152,22 +162,10 @@ if __name__ == "__main__":
         nome_schema = 'dados_gts'
         print('Gerando dados para o schema:', nome_schema)
 
-
         # Chame a função para gerar o arquivo SQL
-        arquivo_sql = gerar_sql(list(file_list),nome_schema)
+        gerar_sql(list(file_list),nome_schema)
 
-        print('###'*50)
-        print('###'*12, "Inserindo no Banco de dados", '###'*12)
-        print('    Executando script sql: ', arquivo_sql)
-        if execute_sql_file('sql/'+arquivo_sql):
-            print(f'    Inserido com Sucesso!')
-        else:
-            print(f'    Erro ao inserir os dados do arquivo sql/{arquivo_sql}.')
-
-        print('###' * 50)
-
-
-        print('O arquivo gerado foi; ', arquivo_sql)
+        print('Gerado com sucesso!!!')
         # Registra o horário de término
         hora_fim = datetime.datetime.now()
         # Calcula a duração total
