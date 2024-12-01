@@ -6,11 +6,15 @@ import re
 import chardet
 import unidecode
 import datetime
+from executa_arquivo_sql import execute_sql_file
+
 def format_file_name(file_name):
     # Remover acentos e caracteres especiais
     formatted_name = unidecode.unidecode(file_name).strip()
-    # Substituir espaços por underscores (ou outro caractere desejado)
+    # Substituir espaços por underscores
     formatted_name = formatted_name.replace(' ', '_')
+    # Substituir múltiplos underscores por um único
+    formatted_name = re.sub(r'_{2,}', '_', formatted_name)
     return formatted_name
 
 def detectar_codificacao(arquivo):
@@ -19,15 +23,34 @@ def detectar_codificacao(arquivo):
         resultado = chardet.detect(dados)
         return resultado['encoding']
 
+
+#removido em 20241130
+# Função para tratar os dados
+# def tratar_dado(dado):
+#     if isinstance(dado, str):
+#         # Se o dado for uma string, remova "_x000D_" e escape aspas simples
+#         dado_tratado = dado.replace("_x000D_", "").replace("'", "''")
+#     else:
+#         # Se o dado não for uma string, converta-o em uma string
+#         dado_tratado = str(dado)
+#     return dado_tratado
+
 # Função para tratar os dados
 def tratar_dado(dado):
     if isinstance(dado, str):
         # Se o dado for uma string, remova "_x000D_" e escape aspas simples
         dado_tratado = dado.replace("_x000D_", "").replace("'", "''")
+    elif isinstance(dado, float):
+        # Se o dado for float, e tiver um valor inteiro, converta para inteiro (sem .0)
+        if dado.is_integer():
+            dado_tratado = str(int(dado))  # Remove o ".0"
+        else:
+            dado_tratado = str(dado)  # Mantém o número flutuante com casas decimais
     else:
-        # Se o dado não for uma string, converta-o em uma string
+        # Se o dado não for uma string ou float, converta-o em uma string
         dado_tratado = str(dado)
     return dado_tratado
+
 
 
 def gerar_sql(file_list,nome_schema):
@@ -111,6 +134,7 @@ def gerar_sql(file_list,nome_schema):
                 sql_file.write(insert_sql)
 
             print(f'O arquvo SQL "{nome_tabela}.sql" foi criado com sucesso para {nome_arquivo}.')
+            return nome_tabela+".sql"
         except Exception as e:
             print(f'Erro ao criar o arquivo SQL:', e)
 
@@ -130,8 +154,20 @@ if __name__ == "__main__":
 
 
         # Chame a função para gerar o arquivo SQL
-        gerar_sql(list(file_list),nome_schema)
+        arquivo_sql = gerar_sql(list(file_list),nome_schema)
 
+        print('###'*50)
+        print('###'*12, "Inserindo no Banco de dados", '###'*12)
+        print('    Executando script sql: ', arquivo_sql)
+        if execute_sql_file('sql/'+arquivo_sql):
+            print(f'    Inserido com Sucesso!')
+        else:
+            print(f'    Erro ao inserir os dados do arquivo sql/{arquivo_sql}.')
+
+        print('###' * 50)
+
+
+        print('O arquivo gerado foi; ', arquivo_sql)
         # Registra o horário de término
         hora_fim = datetime.datetime.now()
         # Calcula a duração total

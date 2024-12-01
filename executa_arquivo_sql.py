@@ -17,8 +17,12 @@ def execute_sql_file(file_path):
         conexao.close()
 
         print(f'Dados do arquivo {file_path} inseridos no banco de dados com sucesso.')
+        # Retorna True se a execução for bem-sucedida
+        return True
     except Exception as e:
+        # Em caso de erro, retorna False
         print(f'Erro ao inserir dados do arquivo {file_path} no banco de dados: {str(e)}')
+        return False
 
 if __name__ == "__main__":
     # Registra o horário de início

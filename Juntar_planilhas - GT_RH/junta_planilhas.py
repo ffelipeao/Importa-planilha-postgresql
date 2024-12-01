@@ -20,8 +20,10 @@ from tkinter.filedialog import askopenfilenames, askdirectory
 def format_file_name(file_name):
     # Remover acentos e caracteres especiais
     formatted_name = unidecode.unidecode(file_name).strip()
-    # Substituir espaços por underscores (ou outro caractere desejado)
+    # Substituir espaços por underscores
     formatted_name = formatted_name.replace(' ', '_')
+    # Substituir múltiplos underscores por um único
+    formatted_name = re.sub(r'_{2,}', '_', formatted_name)
     return formatted_name
 
 # Função para tornar nomes de colunas únicos
