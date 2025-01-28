@@ -39,7 +39,7 @@ def detectar_codificacao(arquivo):
 def tratar_dado(dado):
     if isinstance(dado, str):
         # Se o dado for uma string, remova "_x000D_" e escape aspas simples
-        dado_tratado = dado.replace("_x000D_", "").replace("'", "''")
+        dado_tratado = dado.replace("_x000D_", "").replace("'", "''").replace(" ", "")
     elif isinstance(dado, float):
         # Se o dado for float, e tiver um valor inteiro, converta para inteiro (sem .0)
         if dado.is_integer():
