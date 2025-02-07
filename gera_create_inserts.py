@@ -100,7 +100,7 @@ def gerar_sql(file_list,nome_schema):
             # Crie uma string com a instrução SQL CREATE
             #create_sql = f"CREATE TABLE {nome_schema}.\"{nome_tabela_formatado}\" ({', '.join([f'{col} text' for col in df.columns])});"
             # Crie uma string com a instrução SQL CREATE
-            create_sql = f"CREATE TABLE {nome_schema}.\"{nome_tabela_formatado}\" (" \
+            create_sql = f"CREATE TABLE {nome_schema}.\"{nome_tabela_formatado}\" ( _id_origem serial," \
                          + ', '.join([f'\"{col}\" text' for col in df.columns]) + ");"
 
             print('Gerando INSERT com os dados...')

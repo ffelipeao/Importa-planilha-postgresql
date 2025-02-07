@@ -7,7 +7,7 @@ from tkinter.filedialog import askopenfilenames, askdirectory
 
 """"
     Felipe Alves - 20241105
-    Criado para peparar os dadado do GT de Recursos Hídricos.
+    Criado para preparar os dado do GT de Recursos Hídricos.
     
     O script junta as planilhas com apenas uma página e que já estão transpostas na forma vertical 
     Pode ser configurada para pular as linhas com valores de referencia
@@ -70,10 +70,14 @@ for caminho_arquivo in arquivos_excel:
     arquivo_excel = os.path.basename(caminho_arquivo)
     print(f"Processando o arquivo: {arquivo_excel}")
 
+    # sheets = pd.ExcelFile(caminho_arquivo).sheet_names
+    # print("Abas disponíveis:", sheets)
+    # exit()
     # Carregar a primeira aba do arquivo Excel, pulando as linhas 2 e 3 (índices 1 e 2)
     # Remover "skiprows=[1, 2]" caso queira manter todas as linhas
     dados_aba = pd.read_excel(caminho_arquivo, sheet_name=0)
-
+    # print(dados_aba.head())  # Verifica se os dados foram carregados corretamente
+    # exit()
     # Substitua caracteres não-alfabéticos nos nomes das colunas e converta para minúsculas
     dados_aba.columns  = [re.sub(r'[^a-zA-Z0-9_]', '', format_file_name(col)).lower() for col in dados_aba.columns ]
 
