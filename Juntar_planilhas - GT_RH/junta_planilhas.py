@@ -93,7 +93,7 @@ for caminho_arquivo in arquivos_excel:
     df_combined = pd.concat([df_combined, dados_aba], ignore_index=True, sort=False)
 
 # # Ordenar as colunas pelo nome
-df_combined = df_combined.sort_index(axis=1)
+#df_combined = df_combined.sort_index(axis=1)
 
 # Salvar o DataFrame combinado em um novo arquivo Excel na pasta de saída
 caminho_saida_arquivo = os.path.join(pasta_saida, "dados_combinados.xlsx")
