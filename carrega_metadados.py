@@ -142,6 +142,9 @@ try:
     colunas_nao_encontradas = []
     colunas_comentario_igual = 0
     
+    # Controle para evitar processamento duplicado de tabelas
+    tabelas_ja_processadas = set()
+    
     # Processa cada linha da planilha
     for idx, row in df.iterrows():
         # Limpa os dados
@@ -155,26 +158,37 @@ try:
         
         # Processa comentário da tabela
         if comentario_valido(comentario_tabela):
-            if verificar_tabela_existe(cursor, schema, tabela):
-                comentario_atual = obter_comentario_tabela(cursor, schema, tabela)
+            # Cria uma chave única para a tabela (schema.tabela)
+            chave_tabela = f"{schema}.{tabela}"
+            
+            # Verifica se a tabela já foi processada
+            if chave_tabela not in tabelas_ja_processadas:
+                if verificar_tabela_existe(cursor, schema, tabela):
+                    comentario_atual = obter_comentario_tabela(cursor, schema, tabela)
 
-                # print("--------------------------------")
-                # print(comentario_atual)
-                # print(comentario_tabela)
-                # print("--------------------------------")
-                # exit()
+                    # print("--------------------------------")
+                    # print(comentario_atual)
+                    # print(comentario_tabela)
+                    # print("--------------------------------")
+                    # exit()
 
-                if comentario_atual != comentario_tabela:
-                    atualizar_comentario_tabela(cursor, schema, tabela, comentario_tabela)
-                    print(f"  ✓ Comentário da tabela atualizado")
-                    tabelas_atualizadas += 1
+                    if comentario_atual != comentario_tabela:
+                        atualizar_comentario_tabela(cursor, schema, tabela, comentario_tabela)
+                        print(f"  ✓ Comentário da tabela atualizado")
+                        tabelas_atualizadas += 1
+                    else:
+                        # print(f"  - Comentário da tabela já está atualizado")
+                        tabelas_comentario_igual += 1
+                    tabelas_processadas += 1
                 else:
-                    # print(f"  - Comentário da tabela já está atualizado")
-                    tabelas_comentario_igual += 1
-                tabelas_processadas += 1
-            else:
-                tabelas_nao_encontradas.append(f"{schema}.{tabela}")
-                print(f"  ✗ Tabela não encontrada: {schema}.{tabela}")
+                    tabelas_nao_encontradas.append(f"{schema}.{tabela}")
+                    print(f"  ✗ Tabela não encontrada: {schema}.{tabela}")
+                
+                # Marca a tabela como processada
+                tabelas_ja_processadas.add(chave_tabela)
+            # else:
+            #     # Tabela já foi processada, pula para evitar duplicação
+            #     print(f"  - Tabela {chave_tabela} já foi processada anteriormente")
         
         # Processa comentário da coluna
         if comentario_valido(comentario_coluna) and coluna:
