@@ -7,6 +7,8 @@ Este projeto permite importar dados de planilhas diretamente para o PostgreSQL, 
 ## ⚡ Início Rápido
 
 ### 1. Instalação
+
+**Opção A: Usando Poetry (Recomendado)**
 ```bash
 # Clone o repositório
 git clone <url-do-repositorio>
@@ -14,6 +16,22 @@ cd Importa-planilha-postgresql
 
 # Instale as dependências
 poetry install
+```
+
+**Opção B: Usando pip (sem Poetry)**
+```bash
+# Clone o repositório
+git clone <url-do-repositorio>
+cd Importa-planilha-postgresql
+
+# Crie um ambiente virtual (recomendado)
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# ou
+venv\Scripts\activate     # Windows
+
+# Instale as dependências
+pip install -r requirements.txt
 ```
 
 ### 2. Configuração do Banco
@@ -27,6 +45,8 @@ DB_PASSWORD=sua_senha
 ```
 
 ### 3. Primeira Execução
+
+**Usando Poetry:**
 ```bash
 # Menu interativo com todas as opções
 poetry run python src/main.py
@@ -35,6 +55,16 @@ poetry run python src/main.py
 poetry run importa-planilha          # Menu interativo
 poetry run carrega-metadados         # Gerenciar metadados
 poetry run gera-create-inserts       # Gerar scripts SQL
+```
+
+**Usando pip (sem Poetry):**
+```bash
+# Menu interativo com todas as opções
+python src/main.py
+
+# Executar funcionalidades específicas
+python src/carrega_metadados.py
+python src/gera_create_inserts.py
 ```
 
 ## 📋 O que este projeto faz
@@ -81,8 +111,10 @@ Importa-planilha-postgresql/
 │   ├── executa_arquivo_sql.py
 │   ├── gerar_raster.py
 │   ├── importa_raster_separado.py
-│   └── importa_raster_unidos.py
+│   ├── importa_raster_unidos.py
+│   └── tipodados.txt      # Tipos de dados PostgreSQL
 ├── tools/                  # Ferramentas auxiliares
+│   ├── __init__.py        # Arquivo de inicialização
 │   ├── junta_guias_planilha.py
 │   ├── junta_planilhas.py
 │   ├── transpor_planilha_RH_dados_subteraneo.py
@@ -91,8 +123,15 @@ Importa-planilha-postgresql/
 │   ├── config_exemplo.env # Template de configuração
 │   └── exemplo_uso.md     # Guia de uso
 ├── docs/                   # Documentação
-│   └── README.md          # Documentação completa
+│   └── INSTALACAO_SEM_POETRY.md # Guia de instalação sem Poetry
+├── sql/                    # Scripts SQL gerados
+│   └── *.sql              # Arquivos SQL criados automaticamente
 ├── .env                   # Sua configuração local
+├── .env.example           # Exemplo de configuração
+├── .gitignore             # Arquivos ignorados pelo Git
+├── requirements.txt       # Dependências para pip
+├── requirements-dev.txt   # Dependências de desenvolvimento
+├── README.md              # Documentação completa
 ├── pyproject.toml         # Configuração Poetry
 └── poetry.lock           # Lock file Poetry
 ```
@@ -103,8 +142,14 @@ Importa-planilha-postgresql/
 
 **Para acessar todas as funcionalidades através de um menu interativo:**
 
+**Usando Poetry:**
 ```bash
 poetry run python src/main.py
+```
+
+**Usando pip:**
+```bash
+python src/main.py
 ```
 
 **O menu oferece as seguintes opções:**
@@ -120,13 +165,22 @@ poetry run python src/main.py
 
 **Método 1: Menu interativo (recomendado)**
 ```bash
+# Usando Poetry
 poetry run python src/main.py
+# Escolha opção 2 no menu
+
+# Usando pip
+python src/main.py
 # Escolha opção 2 no menu
 ```
 
 **Método 2: Execução direta**
 ```bash
+# Usando Poetry
 poetry run python src/gera_create_inserts.py
+
+# Usando pip
+python src/gera_create_inserts.py
 ```
 
 ### 📝 Gerenciar Metadados de Tabelas
@@ -143,11 +197,20 @@ poetry run python src/gera_create_inserts.py
 2. **Execute o programa:**
 ```bash
 # Método 1: Menu interativo (recomendado)
+# Usando Poetry
 poetry run python src/main.py
 # Escolha opção 1 no menu
 
+# Usando pip
+python src/main.py
+# Escolha opção 1 no menu
+
 # Método 2: Execução direta
+# Usando Poetry
 poetry run python src/carrega_metadados.py
+
+# Usando pip
+python src/carrega_metadados.py
 ```
 
 3. **O sistema mostra uma pré-visualização** das mudanças:
@@ -178,16 +241,32 @@ Digite:
 **Argumentos de linha de comando:**
 ```bash
 # Especificar arquivo diretamente
+# Usando Poetry
 poetry run python src/carrega_metadados.py --arquivo metadados.xlsx
 
+# Usando pip
+python src/carrega_metadados.py --arquivo metadados.xlsx
+
 # Simular mudanças sem executar
+# Usando Poetry
 poetry run python src/carrega_metadados.py --dry-run
 
+# Usando pip
+python src/carrega_metadados.py --dry-run
+
 # Executar sem pedir confirmação
+# Usando Poetry
 poetry run python src/carrega_metadados.py --arquivo dados.csv --auto-confirm
 
+# Usando pip
+python src/carrega_metadados.py --arquivo dados.csv --auto-confirm
+
 # Ver todas as opções
+# Usando Poetry
 poetry run python src/carrega_metadados.py --help
+
+# Usando pip
+python src/carrega_metadados.py --help
 ```
 
 ### 🛠️ Ferramentas Auxiliares
@@ -195,14 +274,27 @@ poetry run python src/carrega_metadados.py --help
 **Ferramentas de RH e manipulação de planilhas:**
 ```bash
 # Junção de planilhas
+# Usando Poetry
 poetry run python tools/junta_planilhas.py
 
+# Usando pip
+python tools/junta_planilhas.py
+
 # Transposição de dados RH
+# Usando Poetry
 poetry run python tools/transpor_planilha_RH_dados_superficiais.py
 poetry run python tools/transpor_planilha_RH_dados_subteraneo.py
 
+# Usando pip
+python tools/transpor_planilha_RH_dados_superficiais.py
+python tools/transpor_planilha_RH_dados_subteraneo.py
+
 # Junção de guias de planilha
+# Usando Poetry
 poetry run python tools/junta_guias_planilha.py
+
+# Usando pip
+python tools/junta_guias_planilha.py
 ```
 
 ### 🗺️ Dados Geoespaciais
@@ -210,20 +302,39 @@ poetry run python tools/junta_guias_planilha.py
 **Importação de dados raster:**
 ```bash
 # Gerar raster
+# Usando Poetry
 poetry run python src/gerar_raster.py
 
+# Usando pip
+python src/gerar_raster.py
+
 # Importar raster separado
+# Usando Poetry
 poetry run python src/importa_raster_separado.py
 
+# Usando pip
+python src/importa_raster_separado.py
+
 # Importar raster unido
+# Usando Poetry
 poetry run python src/importa_raster_unidos.py
+
+# Usando pip
+python src/importa_raster_unidos.py
 ```
 
 ## 📦 Pré-requisitos
 
+**Obrigatórios:**
 - **Python 3.8+** instalado
-- **Poetry** instalado ([como instalar](https://python-poetry.org/docs/#installation))
 - **PostgreSQL** configurado e rodando
+
+**Para usar Poetry (recomendado):**
+- **Poetry** instalado ([como instalar](https://python-poetry.org/docs/#installation))
+
+**Para usar pip:**
+- **pip** (geralmente vem com Python)
+- **Ambiente virtual** (recomendado)
 
 ## 🐛 Problemas Comuns
 
@@ -238,14 +349,26 @@ poetry run python src/importa_raster_unidos.py
 - O sistema funciona em ambientes headless (SSH/servidor)
 
 ### ❌ Dependências Não Instaladas
+
+**Usando Poetry:**
 ```bash
 # Reinstalar todas as dependências
 poetry install --sync
 ```
 
+**Usando pip:**
+```bash
+# Reinstalar todas as dependências
+pip install -r requirements.txt --force-reinstall
+
+# Ou para desenvolvimento
+pip install -r requirements-dev.txt --force-reinstall
+```
+
 ### ❌ Problemas com Imports
 - Execute sempre da pasta `src/` ou use os scripts do Poetry
 - Os imports relativos funcionam apenas dentro de `src/`
+- Se usar pip, execute `python src/arquivo.py` em vez de `python arquivo.py`
 
 ## 📄 Licença
 
@@ -257,6 +380,6 @@ Felipe Alves - Desenvolvedor do projeto
 
 ---
 
-📖 **Para documentação completa, veja [docs/README.md](docs/README.md)**  
 📋 **Para exemplos práticos, veja [examples/exemplo_uso.md](examples/exemplo_uso.md)**  
-⚙️ **Para template de configuração, veja [examples/config_exemplo.env](examples/config_exemplo.env)**
+⚙️ **Para template de configuração, veja [examples/config_exemplo.env](examples/config_exemplo.env)**  
+📦 **Para instalação sem Poetry, veja [docs/INSTALACAO_SEM_POETRY.md](docs/INSTALACAO_SEM_POETRY.md)**

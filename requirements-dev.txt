@@ -1,0 +1,8 @@
+# Dependências de desenvolvimento
+# Para instalar: pip install -r requirements-dev.txt
+
+# Inclui todas as dependências principais
+-r requirements.txt
+
+# Dependências específicas para desenvolvimento
+# (adicione aqui dependências como pytest, black, flake8, etc. se necessário)

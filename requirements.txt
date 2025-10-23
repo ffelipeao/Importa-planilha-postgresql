@@ -1,0 +1,22 @@
+# Dependências principais do projeto Importa Planilha PostgreSQL
+# Para instalar: pip install -r requirements.txt
+
+# Manipulação de dados
+pandas>=1.5.0
+numpy>=1.21.0
+
+# Banco de dados PostgreSQL
+psycopg2-binary>=2.9.0
+
+# Configuração e ambiente
+python-dotenv>=0.19.0
+
+# Processamento de texto
+unidecode>=1.3.0
+chardet>=4.0.0
+
+# Manipulação de planilhas Excel
+openpyxl>=3.0.0
+
+# Dados geoespaciais (opcional - apenas para funcionalidades raster)
+geopandas>=0.12.0

@@ -116,7 +116,7 @@ def mostrar_ajuda():
     """Mostra informações de ajuda"""
     print("\n❓ AJUDA")
     print("-" * 40)
-    print("📖 Documentação completa: docs/README.md")
+    print("📖 Documentação completa: README.md")
     print("📋 Exemplos de uso: examples/exemplo_uso.md")
     print("⚙️  Template de configuração: examples/config_exemplo.env")
     print()
