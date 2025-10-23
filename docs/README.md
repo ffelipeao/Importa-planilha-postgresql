@@ -28,13 +28,11 @@ DB_PASSWORD=sua_senha
 
 ### 3. Primeira Execução
 ```bash
-# Menu interativo com todas as opções
-poetry run python src/main.py
+# Importar planilha para PostgreSQL
+poetry run python main.py
 
-# Ou usar scripts específicos do Poetry
-poetry run importa-planilha          # Menu interativo
-poetry run carrega-metadados         # Gerenciar metadados
-poetry run gera-create-inserts       # Gerar scripts SQL
+# Gerenciar metadados de tabelas
+poetry run python carrega_metadados.py
 ```
 
 ## 📋 O que este projeto faz
@@ -53,81 +51,29 @@ poetry run gera-create-inserts       # Gerar scripts SQL
 - Confirmação interativa para segurança
 - Modo simulação para testar sem alterar dados
 
-**3. Geração de Scripts SQL**
-- Converte planilhas em scripts CREATE TABLE e INSERT
-- Cria arquivos SQL prontos para execução
-- Suporte para Excel (.xlsx) e CSV
-- Tratamento automático de dados e codificação
-
-**4. Dados Geoespaciais**
+**3. Dados Geoespaciais**
 - Importação de dados raster
 - Processamento de informações geográficas
 - Integração com PostGIS
 
-**5. Utilitários de Planilhas**
+**4. Utilitários de Planilhas**
 - Junção de múltiplas planilhas
 - Transposição de dados
 - Ferramentas específicas para planilhas de RH
 
-## 🗂️ Estrutura do Projeto
-
-```
-Importa-planilha-postgresql/
-├── src/                    # Código fonte principal
-│   ├── main.py            # Interface principal
-│   ├── carrega_metadados.py # Gerenciamento de metadados
-│   ├── conexao.py         # Conexão com banco
-│   ├── gera_create_inserts.py
-│   ├── executa_arquivo_sql.py
-│   ├── gerar_raster.py
-│   ├── importa_raster_separado.py
-│   └── importa_raster_unidos.py
-├── tools/                  # Ferramentas auxiliares
-│   ├── junta_guias_planilha.py
-│   ├── junta_planilhas.py
-│   ├── transpor_planilha_RH_dados_subteraneo.py
-│   └── transpor_planilha_RH_dados_superficiais.py
-├── examples/               # Exemplos e templates
-│   ├── config_exemplo.env # Template de configuração
-│   └── exemplo_uso.md     # Guia de uso
-├── docs/                   # Documentação
-│   └── README.md          # Documentação completa
-├── .env                   # Sua configuração local
-├── pyproject.toml         # Configuração Poetry
-└── poetry.lock           # Lock file Poetry
-```
-
 ## 🎯 Como Usar
 
-### 🚀 Menu Interativo (Recomendado)
-
-**Para acessar todas as funcionalidades através de um menu interativo:**
+### 📊 Importar Planilha para PostgreSQL
 
 ```bash
 poetry run python src/main.py
 ```
 
-**O menu oferece as seguintes opções:**
-- 📝 Gerenciar Metadados de Tabelas  
-- 📄 Gerar Scripts SQL (CREATE + INSERT)
-- 🗺️ Dados Geoespaciais
-- 🛠️ Ferramentas Auxiliares
-- ❓ Ajuda
-
-### 📄 Gerar Scripts SQL de Planilhas
-
-**Para converter planilhas em scripts CREATE TABLE e INSERT:**
-
-**Método 1: Menu interativo (recomendado)**
-```bash
-poetry run python src/main.py
-# Escolha opção 2 no menu
-```
-
-**Método 2: Execução direta**
-```bash
-poetry run python src/gera_create_inserts.py
-```
+**O sistema automaticamente:**
+- Detecta o formato do arquivo
+- Cria uma tabela no PostgreSQL
+- Importa todos os dados
+- Gera o script SQL correspondente
 
 ### 📝 Gerenciar Metadados de Tabelas
 
@@ -142,11 +88,6 @@ poetry run python src/gera_create_inserts.py
 
 2. **Execute o programa:**
 ```bash
-# Método 1: Menu interativo (recomendado)
-poetry run python src/main.py
-# Escolha opção 1 no menu
-
-# Método 2: Execução direta
 poetry run python src/carrega_metadados.py
 ```
 
@@ -219,6 +160,34 @@ poetry run python src/importa_raster_separado.py
 poetry run python src/importa_raster_unidos.py
 ```
 
+## 🗂️ Estrutura do Projeto
+
+```
+Importa-planilha-postgresql/
+├── src/                    # Código fonte principal
+│   ├── main.py            # Interface principal
+│   ├── carrega_metadados.py # Gerenciamento de metadados
+│   ├── conexao.py         # Conexão com banco
+│   ├── gera_create_inserts.py
+│   ├── executa_arquivo_sql.py
+│   ├── gerar_raster.py
+│   ├── importa_raster_separado.py
+│   └── importa_raster_unidos.py
+├── tools/                  # Ferramentas auxiliares
+│   ├── junta_guias_planilha.py
+│   ├── junta_planilhas.py
+│   ├── transpor_planilha_RH_dados_subteraneo.py
+│   └── transpor_planilha_RH_dados_superficiais.py
+├── examples/               # Exemplos e templates
+│   ├── config_exemplo.env # Template de configuração
+│   └── exemplo_uso.md     # Guia de uso
+├── docs/                   # Documentação
+│   └── README.md          # Documentação completa
+├── .env                   # Sua configuração local
+├── pyproject.toml         # Configuração Poetry
+└── poetry.lock           # Lock file Poetry
+```
+
 ## 📦 Pré-requisitos
 
 - **Python 3.8+** instalado
@@ -254,9 +223,3 @@ MIT License - veja o arquivo `pyproject.toml` para detalhes.
 ## 👨‍💻 Autor
 
 Felipe Alves - Desenvolvedor do projeto
-
----
-
-📖 **Para documentação completa, veja [docs/README.md](docs/README.md)**  
-📋 **Para exemplos práticos, veja [examples/exemplo_uso.md](examples/exemplo_uso.md)**  
-⚙️ **Para template de configuração, veja [examples/config_exemplo.env](examples/config_exemplo.env)**

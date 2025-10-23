@@ -7,7 +7,7 @@ name = "importa-planilha-postgresql"
 version = "0.1.0"
 description = "Projeto para importar planilhas para PostgreSQL"
 authors = ["Felipe"]
-readme = "README.md"
+readme = "docs/README.md"
 license = "MIT"
 keywords = ["postgresql", "excel", "planilhas", "importacao", "dados"]
 classifiers = [
@@ -38,5 +38,6 @@ openpyxl = ">=3.0.0"
 geopandas = ">=0.12.0"
 
 [tool.poetry.scripts]
-importa-planilha = "main:main"
-carrega-metadados = "carrega_metadados:main"
+importa-planilha = "src.main:main"
+carrega-metadados = "src.carrega_metadados:main"
+gera-create-inserts = "src.gera_create_inserts:main"
