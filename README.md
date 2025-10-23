@@ -1,32 +1,22 @@
 # Importa Planilha PostgreSQL
 
-Projeto Python para importação e processamento de planilhas Excel/CSV para banco de dados PostgreSQL, incluindo funcionalidades de metadados, raster e manipulação de dados geoespaciais.
+🚀 **Ferramenta completa para importar planilhas Excel/CSV para PostgreSQL**
 
-## 🚀 Instalação e Configuração com Poetry
+Este projeto permite importar dados de planilhas diretamente para o PostgreSQL, gerenciar metadados de tabelas e colunas, e trabalhar com dados geoespaciais de forma simples e eficiente.
 
-### Pré-requisitos
-- Python 3.8 ou superior
-- Poetry instalado ([como instalar Poetry](https://python-poetry.org/docs/#installation))
-- PostgreSQL configurado
+## ⚡ Início Rápido
 
-### Configuração do Projeto
-
-1. **Clone o repositório:**
+### 1. Instalação
 ```bash
+# Clone o repositório
 git clone <url-do-repositorio>
 cd Importa-planilha-postgresql
-```
 
-2. **Instale as dependências com Poetry:**
-```bash
-# Instalar todas as dependências (produção + desenvolvimento)
+# Instale as dependências
 poetry install
-
-# Ou apenas dependências de produção
-poetry install --only main
 ```
 
-3. **Configure as variáveis de ambiente:**
+### 2. Configuração do Banco
 Crie um arquivo `.env` na raiz do projeto:
 ```env
 DB_HOST=localhost
@@ -36,164 +26,130 @@ DB_USER=seu_usuario
 DB_PASSWORD=sua_senha
 ```
 
-4. **Execute o projeto:**
+### 3. Primeira Execução
 ```bash
-# Usando Poetry
+# Importar planilha para PostgreSQL
 poetry run python main.py
 
-# Ou ativando o ambiente virtual
-poetry shell
-python main.py
+# Gerenciar metadados de tabelas
+poetry run python carrega_metadados.py
 ```
 
-### Comandos Poetry Úteis
+## 📋 O que este projeto faz
 
-```bash
-# Adicionar nova dependência
-poetry add nome-do-pacote
+### 🎯 Funcionalidades Principais
 
-# Adicionar dependência de desenvolvimento
-poetry add --group dev nome-do-pacote
+**1. Importação de Planilhas**
+- Converte Excel (.xlsx) e CSV para tabelas PostgreSQL
+- Criação automática de tabelas
+- Detecção automática de tipos de dados
+- Interface gráfica para seleção de arquivos
 
-# Atualizar dependências
-poetry update
+**2. Gerenciamento de Metadados**
+- Adiciona comentários descritivos em tabelas e colunas
+- Pré-visualiza mudanças antes de executar
+- Confirmação interativa para segurança
+- Modo simulação para testar sem alterar dados
 
-# Ver dependências instaladas
-poetry show
+**3. Dados Geoespaciais**
+- Importação de dados raster
+- Processamento de informações geográficas
+- Integração com PostGIS
 
-# Executar comandos no ambiente virtual
-poetry run python script.py
-```
-
-## 📋 Funcionalidades
-
-### 🔧 Módulos Principais
-
-- **`main.py`** - Interface principal para importação de planilhas Excel/CSV
-- **`carrega_metadados.py`** - Gerenciamento de metadados de tabelas e colunas
-- **`conexao.py`** - Classe para conexão com PostgreSQL
-- **`gera_create_inserts.py`** - Geração automática de scripts SQL CREATE e INSERT
-- **`executa_arquivo_sql.py`** - Execução de arquivos SQL
-
-### 🗺️ Módulos Geoespaciais
-
-- **`gerar_raster.py`** - Geração de dados raster
-- **`importa_raster_separado.py`** - Importação de rasters individuais
-- **`importa_raster_unidos.py`** - Importação de rasters consolidados
-
-### 📊 Utilitários de Planilhas
-
-- **`Juntar_planilhas - GT_RH/`** - Ferramentas para manipulação de planilhas de RH
-  - `junta_guias_planilha.py` - Junção de guias de planilhas
-  - `junta_planilhas.py` - Consolidação de múltiplas planilhas
-  - `transpor_planilha_RH_dados_subteraneo.py` - Transposição de dados subterrâneos
-  - `transpor_planilha_RH_dados_superficiais.py` - Transposição de dados superficiais
+**4. Utilitários de Planilhas**
+- Junção de múltiplas planilhas
+- Transposição de dados
+- Ferramentas específicas para planilhas de RH
 
 ## 🎯 Como Usar
 
-### Importação Básica de Planilhas
+### 📊 Importar Planilha para PostgreSQL
 
-1. Execute o arquivo principal:
+1. **Execute o programa:**
 ```bash
 poetry run python main.py
 ```
 
-2. Selecione o arquivo Excel (.xlsx) ou CSV através da interface gráfica
+2. **Selecione sua planilha** (Excel .xlsx ou CSV)
 
-3. O sistema irá:
-   - Detectar automaticamente o formato do arquivo
-   - Criar uma tabela no PostgreSQL com o nome do arquivo
-   - Importar todos os dados da planilha
-   - Gerar o script SQL CREATE correspondente
+3. **O sistema automaticamente:**
+   - Detecta o formato do arquivo
+   - Cria uma tabela no PostgreSQL
+   - Importa todos os dados
+   - Gera o script SQL correspondente
 
-### Gerenciamento de Metadados
+### 📝 Gerenciar Metadados de Tabelas
 
+**Para adicionar comentários descritivos em tabelas e colunas:**
+
+1. **Prepare sua planilha** com as colunas:
+   - `schema` - Nome do schema (ex: public)
+   - `tabela` - Nome da tabela (ex: usuarios)
+   - `comentario_tabela` - Descrição da tabela
+   - `coluna` - Nome da coluna (ex: email)
+   - `comentario_coluna` - Descrição da coluna
+
+2. **Execute o programa:**
 ```bash
 poetry run python carrega_metadados.py
 ```
 
-Este módulo permite:
-- Carregar metadados de tabelas e colunas a partir de planilhas
-- Verificar existência de tabelas e colunas no banco
-- Atualizar comentários de tabelas e colunas
-- Gerar relatórios detalhados das operações
+3. **O sistema mostra uma pré-visualização** das mudanças:
+```
+================================================================================
+PRÉ-VISUALIZAÇÃO DAS MUDANÇAS
+================================================================================
 
-### Geração de Scripts SQL
+📋 TABELAS QUE SERÃO ATUALIZADAS (2):
+--------------------------------------------------------------------------------
 
+1. public.usuarios (linha 1)
+   ATUAL:
+   (sem comentário)
+   NOVO:
+   'Tabela de usuários do sistema'
+----------------------------------------
+
+🤔 Deseja executar essas mudanças?
+Digite:
+  's' ou 'sim' - Para executar as mudanças
+  'n' ou 'não' - Para cancelar
+  'dry' - Para simular sem executar
+```
+
+### 🔧 Opções Avançadas
+
+**Argumentos de linha de comando:**
 ```bash
-poetry run python gera_create_inserts.py
+# Especificar arquivo diretamente
+poetry run python carrega_metadados.py --arquivo metadados.xlsx
+
+# Simular mudanças sem executar
+poetry run python carrega_metadados.py --dry-run
+
+# Executar sem pedir confirmação
+poetry run python carrega_metadados.py --arquivo dados.csv --auto-confirm
 ```
 
-Funcionalidades:
-- Geração automática de scripts CREATE TABLE
-- Criação de scripts INSERT com os dados
-- Detecção automática de codificação de arquivos
-- Formatação de nomes de arquivos e colunas
+## 📦 Pré-requisitos
 
-## 📦 Dependências
+- **Python 3.8+** instalado
+- **Poetry** instalado ([como instalar](https://python-poetry.org/docs/#installation))
+- **PostgreSQL** configurado e rodando
 
-### Principais
-- **pandas** - Manipulação de dados
-- **numpy** - Computação numérica
-- **psycopg2-binary** - Conector PostgreSQL
-- **python-dotenv** - Gerenciamento de variáveis de ambiente
-- **openpyxl** - Leitura de arquivos Excel
-- **chardet** - Detecção de codificação
-- **unidecode** - Normalização de caracteres
+## 🐛 Problemas Comuns
 
-### Desenvolvimento
-- **geopandas** - Processamento de dados geoespaciais
-
-## 🔧 Configuração do Banco
-
-O projeto utiliza PostgreSQL e requer as seguintes configurações no arquivo `.env`:
-
-```env
-DB_HOST=localhost          # Host do banco
-DB_PORT=5432              # Porta do PostgreSQL
-DB_NAME=nome_do_banco     # Nome do banco de dados
-DB_USER=usuario           # Usuário do banco
-DB_PASSWORD=senha         # Senha do usuário
-```
-
-## 📁 Estrutura do Projeto
-
-```
-Importa-planilha-postgresql/
-├── main.py                           # Interface principal
-├── carrega_metadados.py             # Gerenciamento de metadados
-├── conexao.py                       # Classe de conexão
-├── gera_create_inserts.py           # Geração de scripts SQL
-├── executa_arquivo_sql.py           # Execução de SQL
-├── gerar_raster.py                  # Geração de raster
-├── importa_raster_separado.py       # Importação de raster individual
-├── importa_raster_unidos.py         # Importação de raster consolidado
-├── Juntar_planilhas - GT_RH/        # Utilitários de planilhas RH
-├── sql/                             # Arquivos SQL
-├── pyproject.toml                   # Configuração Poetry
-├── poetry.lock                      # Lock file Poetry
-└── .env                            # Variáveis de ambiente
-```
-
-## ⚠️ Importante
-
-- **Mantenha o arquivo `poetry.lock`** versionado para garantir reproduzibilidade
-- **Configure corretamente o arquivo `.env`** com suas credenciais do PostgreSQL
-- **Use Poetry para gerenciar dependências** - não instale pacotes manualmente
-- **Execute sempre dentro do ambiente virtual** do Poetry
-
-## 🐛 Solução de Problemas
-
-### Erro de Conexão com PostgreSQL
+### ❌ Erro de Conexão com PostgreSQL
 - Verifique se o PostgreSQL está rodando
 - Confirme as credenciais no arquivo `.env`
-- Teste a conexão manualmente
+- O sistema mostra informações detalhadas sobre a conexão
 
-### Problemas com Codificação
-- O sistema detecta automaticamente a codificação de arquivos CSV
-- Para arquivos com problemas, use `chardet` para identificar a codificação
+### ❌ Problemas com Seleção de Arquivo
+- Use `--arquivo` para especificar arquivo diretamente
+- Use `--dry-run` para testar sem executar mudanças
+- O sistema funciona em ambientes headless (SSH/servidor)
 
-### Dependências Não Instaladas
+### ❌ Dependências Não Instaladas
 ```bash
 # Reinstalar todas as dependências
 poetry install --sync
