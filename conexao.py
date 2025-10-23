@@ -15,19 +15,47 @@ class ConexaoBanco:
         self.port = os.getenv("DB_PORT")
     def conectar(self):
         try:
-            # Conectar ao banco de dados
+            # Verificar se as variáveis de ambiente estão definidas
+            if not all([self.server, self.user, self.senha, self.database, self.port]):
+                print("ERRO: Variáveis de ambiente do banco não estão definidas!")
+                print("Verifique se existe um arquivo .env com as seguintes variáveis:")
+                print("  DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT")
+                print(f"Valores atuais:")
+                print(f"  DB_HOST: {self.server}")
+                print(f"  DB_USER: {self.user}")
+                print(f"  DB_PASSWORD: {'***' if self.senha else 'NÃO DEFINIDO'}")
+                print(f"  DB_NAME: {self.database}")
+                print(f"  DB_PORT: {self.port}")
+                return None
+            
+            print(f"Tentando conectar ao banco: {self.server}:{self.port}/{self.database}")
+            print(f"Usuário: {self.user}")
+            
+            # Conectar ao banco de dados com timeout
             conexao = psycopg2.connect(
                 dbname=self.database,
                 user=self.user,
                 password=self.senha,
                 host=self.server,
                 port=self.port,
-                application_name="API_Python"
+                application_name="API_Python",
+                connect_timeout=10  # Timeout de 10 segundos
             )
-            # print("Conexão bem-sucedida!")
+            print("✓ Conexão bem-sucedida!")
             return conexao
+        except psycopg2.OperationalError as e:
+            print(f"ERRO de conexão: {e}")
+            print("\nPossíveis causas:")
+            print("1. Banco de dados não está rodando")
+            print("2. Credenciais incorretas")
+            print("3. Firewall bloqueando a conexão")
+            print("4. Host/porta incorretos")
+            return None
         except psycopg2.Error as e:
-            print("Erro ao conectar:", e)
+            print(f"ERRO do PostgreSQL: {e}")
+            return None
+        except Exception as e:
+            print(f"ERRO inesperado: {e}")
             return None
 
     def execute_query(self, conexao, query, parametros=None):
