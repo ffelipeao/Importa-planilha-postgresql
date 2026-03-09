@@ -6,3 +6,6 @@ data/
 __pycache__/
 *.pyc
 .pytest_cache/
+.venv/
+.idea/
+backup_bd_flonaca/

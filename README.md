@@ -17,13 +17,22 @@ git clone <url-do-repositorio>
 cd Importa-planilha-postgresql
 ```
 
-2. **Instale as dependências com Poetry:**
+2. **Crie o ambiente virtual e instale as dependências com Poetry:**
 ```bash
-# Instalar todas as dependências (produção + desenvolvimento)
+# (Opcional) Manter o ambiente virtual dentro do projeto (pasta .venv)
+poetry config virtualenvs.in-project true
+
+# Criar o ambiente virtual com o Python do sistema
+poetry env use python
+
+# Ou especificar uma versão do Python (ex: 3.11)
+# poetry env use 3.11
+
+# Instalar dependências (cria o venv automaticamente se ainda não existir)
 poetry install
 
 # Ou apenas dependências de produção
-poetry install --only main
+# poetry install --only main
 ```
 
 3. **Configure as variáveis de ambiente:**
@@ -36,12 +45,12 @@ DB_USER=seu_usuario
 DB_PASSWORD=sua_senha
 ```
 
-4. **Execute o projeto:**
+4. **Ative o ambiente virtual e execute o projeto:**
 ```bash
-# Usando Poetry
+# Opção 1: Executar sem ativar o shell (recomendado)
 poetry run python main.py
 
-# Ou ativando o ambiente virtual
+# Opção 2: Ativar o ambiente virtual e rodar os comandos
 poetry shell
 python main.py
 ```
@@ -63,6 +72,69 @@ poetry show
 
 # Executar comandos no ambiente virtual
 poetry run python script.py
+```
+
+### Ambiente virtual: criar e usar
+
+**Criar o ambiente virtual**
+
+O Poetry cria o ambiente virtual na primeira vez que você roda `poetry install`. Para definir o Python usado e garantir que o venv fique dentro do projeto:
+
+```bash
+# (Opcional) Fazer o venv ficar na pasta .venv do projeto
+poetry config virtualenvs.in-project true
+
+# Usar o Python padrão do sistema
+poetry env use python
+
+# Ou usar uma versão específica (ex: 3.11, 3.12)
+poetry env use 3.11
+
+# Criar o venv e instalar dependências
+poetry install
+```
+
+O ambiente ficará em `.venv/` na raiz do projeto (se `virtualenvs.in-project` for `true`) ou na pasta de caches do Poetry.
+
+**Usar o ambiente virtual**
+
+| Forma | Comando | Quando usar |
+|-------|---------|-------------|
+| Sem ativar | `poetry run python main.py` | Rodar um script rápido sem mudar o terminal |
+| Shell do Poetry | `poetry shell` → depois `python main.py` | Vários comandos seguidos no mesmo ambiente |
+| Ativar manualmente (Windows) | `.venv\Scripts\activate` | Usar o venv no PowerShell/CMD como “ativado” |
+
+**Exemplos:**
+
+```bash
+# Rodar script sem ativar
+poetry run python carrega_metadados.py
+poetry run python exporta_backup_bd.py
+
+# Entrar no shell do ambiente (o prompt muda)
+poetry shell
+python main.py
+pip list
+exit
+
+# No Windows PowerShell: ativar o .venv manualmente
+.venv\Scripts\Activate.ps1
+python main.py
+deactivate
+```
+
+**Outros comandos úteis**
+
+```bash
+# Ver qual Python o Poetry está usando
+poetry env info
+
+# Remover o ambiente virtual atual
+poetry env remove python
+
+# Recriar o venv (depois rode poetry install de novo)
+poetry env use python
+poetry install
 ```
 
 ## 📋 Funcionalidades
