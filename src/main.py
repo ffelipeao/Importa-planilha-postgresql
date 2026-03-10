@@ -90,6 +90,7 @@ def mostrar_ferramentas():
     print("3. Transpor Planilha RH - Dados Superficiais")
     print("4. Transpor Planilha RH - Dados Subterrâneos")
     print("5. Executar Arquivo SQL")
+    print("6. Exportar backup do banco de dados")
     print("0. Voltar ao menu principal")
     
     opcao = input("\nDigite sua escolha: ").strip()
@@ -99,7 +100,8 @@ def mostrar_ferramentas():
         "2": "tools/junta_guias_planilha.py",
         "3": "tools/transpor_planilha_RH_dados_superficiais.py",
         "4": "tools/transpor_planilha_RH_dados_subteraneo.py",
-        "5": "src/executa_arquivo_sql.py"
+        "5": "src/executa_arquivo_sql.py",
+        "6": "src/exporta_backup_bd.py",
     }
     
     if opcao in scripts:

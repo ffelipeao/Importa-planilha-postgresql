@@ -102,7 +102,7 @@ def validar_e_limpar_backups_antigos(dias=15):
     limite = datetime.now() - timedelta(days=dias)
     removidos = 0
 
-    for arquivo in pasta.iterdir():
+    for arquivo in pasta.glob("*.dump"):
         if not arquivo.is_file():
             continue
         try:
