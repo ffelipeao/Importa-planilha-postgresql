@@ -4,10 +4,10 @@ import psycopg2
 import tkinter as tk
 from tkinter import filedialog
 from dotenv import load_dotenv
-
 import re
 
 def criar_tabela_postgresql_com_nome_arquivo(nome_arquivo, db_params):
+    """Cria uma tabela PostgreSQL a partir de uma planilha"""
     try:
         # Determinar o tipo de arquivo usando a extensão
         extensao = os.path.splitext(nome_arquivo)[1]
@@ -29,7 +29,7 @@ def criar_tabela_postgresql_com_nome_arquivo(nome_arquivo, db_params):
 
         # Criar uma string com a instrução SQL CREATE
         create_sql = f"CREATE TABLE {nome_tabela} ({', '.join([f'{col} text' for col in df.columns])})"
-
+        
         # Imprimir a instrução SQL CREATE na tela
         print("Instrução SQL CREATE:")
         print(create_sql)
@@ -52,30 +52,48 @@ def criar_tabela_postgresql_com_nome_arquivo(nome_arquivo, db_params):
     except Exception as e:
         return f"Erro ao criar a tabela: {str(e)}"
 
+def main():
+    """Função principal para importação básica"""
+    print("📊 IMPORTAR PLANILHA PARA POSTGRESQL")
+    print("-" * 50)
+    
+    # Carregar variáveis de ambiente a partir do arquivo .env
+    load_dotenv()
 
-# Carregar variáveis de ambiente a partir do arquivo .env
-load_dotenv()
+    # Usar as variáveis de ambiente
+    db_params = {
+        'dbname': os.getenv('DB_NAME', default='seu_banco_de_dados'),
+        'user': os.getenv('DB_USER', default='seu_usuario'),
+        'password': os.getenv('DB_PASSWORD', default='sua_senha'),
+        'host': os.getenv('DB_HOST', default='localhost'),
+        'port': os.getenv('DB_PORT', default='5432')
+    }
 
-# Usar as variáveis de ambiente
-# Leia as informações de conexão do arquivo .env
-db_params = {
-    'dbname': os.getenv('DB_NAME', default='seu_banco_de_dados'),
-    'user': os.getenv('DB_USER', default='seu_usuario'),
-    'password': os.getenv('DB_PASSWORD', default='sua_senha'),
-    'host': os.getenv('DB_HOST', default='localhost'),
-    'port': os.getenv('DB_PORT', default='5432')
-}
+    # Criar uma janela de diálogo para selecionar o arquivo
+    root = tk.Tk()
+    root.withdraw()  # Ocultar a janela principal
+    nome_arquivo = filedialog.askopenfilename(
+        title="Selecionar planilha para importar",
+        filetypes=[
+            ("Arquivos Excel", "*.xlsx"),
+            ("Arquivos CSV", "*.csv"),
+            ("Todos os arquivos", "*.*")
+        ]
+    )
 
-# Criar uma janela de diálogo para selecionar o arquivo
-root = tk.Tk()
-root.withdraw()  # Ocultar a janela principal
-nome_arquivo = filedialog.askopenfilename(filetypes=[("Arquivos XLSX", "*.xlsx"), ("Arquivos CSV", "*.csv")])
+    if nome_arquivo:
+        print(f"Arquivo selecionado: {nome_arquivo}")
+        print("Processando...")
+        
+        # Chamar a função para criar a tabela no PostgreSQL
+        resultado = criar_tabela_postgresql_com_nome_arquivo(nome_arquivo, db_params)
 
-if nome_arquivo:
-    # Chamar a função para criar a tabela no PostgreSQL
-    resultado = criar_tabela_postgresql_com_nome_arquivo(nome_arquivo, db_params)
+        # Exibir o resultado
+        print("\n" + "=" * 50)
+        print(resultado)
+        print("=" * 50)
+    else:
+        print("❌ Nenhum arquivo selecionado.")
 
-    # Exibir o resultado
-    print(resultado)
-else:
-    print("Nenhum arquivo selecionado.")
+if __name__ == "__main__":
+    main()

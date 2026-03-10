@@ -129,6 +129,8 @@ def gerar_sql(file_list,nome_schema):
             insert_sql = insert_sql.rstrip(',\n') + ';'
 
             print("Escrevendo arquivo .sql")
+            # Criar a pasta sql se não existir
+            os.makedirs('sql', exist_ok=True)
             # Crie o arquivo SQL com codificação utf-8
             with open(f'sql/{nome_tabela}.sql', 'w', encoding='utf-8') as sql_file:
                 sql_file.write(create_sql + '\n')
@@ -148,14 +150,22 @@ def gerar_sql(file_list,nome_schema):
         except Exception as e:
             print(f'Erro ao criar o arquivo SQL:', e)
 
-if __name__ == "__main__":
+def main():
+    """Função principal para gerar CREATE e INSERTs"""
     # Registra o horário de início
     hora_inicio = datetime.datetime.now()
     print("Hora inicial:", hora_inicio.strftime("%Y-%m-%d %H:%M:%S"))
     # Crie uma janela de diálogo para selecionar o arquivo
     root = tk.Tk()
     root.withdraw()  # Ocultar a janela principal
-    file_list = filedialog.askopenfilenames(filetypes=[("Supported Files", "*.xlsx;*.csv"),])
+    file_list = filedialog.askopenfilenames(
+        title="Selecionar arquivos Excel ou CSV",
+        filetypes=[
+            ("Arquivos Excel", "*.xlsx"),
+            ("Arquivos CSV", "*.csv"),
+            ("Todos os arquivos", "*.*")
+        ]
+    )
 
     if file_list:
         # nome_schema = input("Informe o nome do Schema: ")
@@ -176,3 +186,6 @@ if __name__ == "__main__":
         print("Tempo total de execução:", duracao_total)
     else:
         print("Nenhum arquivo selecionado.")
+
+if __name__ == "__main__":
+    main()
