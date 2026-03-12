@@ -336,6 +336,117 @@ python src/importa_raster_unidos.py
 - **pip** (geralmente vem com Python)
 - **Ambiente virtual** (recomendado)
 
+## 💻 Guia rápido para macOS (Mac)
+
+Este passo a passo foi pensado para configurar o ambiente em macOS (incluindo Macs com Apple Silicon).
+
+### 1. Ferramentas básicas
+
+- **Instalar Xcode Command Line Tools (compiladores básicos):**
+```bash
+xcode-select --install
+```
+
+- **Instalar o Homebrew (gerenciador de pacotes do macOS):**
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Após a instalação, siga as instruções que aparecem no terminal para adicionar o `brew` ao `PATH` (por exemplo, em Macs com chip M1/M2/M3, algo como):
+```bash
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+eval "$(/opt/homebrew/bin/brew shellenv)"
+```
+
+### 2. Instalar Python no macOS
+
+Recomenda-se usar o Python do Homebrew:
+```bash
+brew install python
+python3 --version
+```
+
+### 3. Criar ambiente virtual (sem Poetry)
+
+Se você preferir usar `pip` em vez de Poetry:
+```bash
+cd Importa-planilha-postgresql
+python3 -m venv .venv
+source .venv/bin/activate  # macOS (zsh/bash)
+
+# Instalar dependências
+pip install -r requirements.txt
+```
+
+### 4. Instalar Poetry no macOS (opção recomendada)
+
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
+```
+
+Depois do comando acima, adicione o Poetry ao `PATH` (caso necessário), por exemplo:
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+Então, na pasta do projeto:
+```bash
+cd Importa-planilha-postgresql
+poetry install
+poetry run python src/main.py
+```
+
+### 5. Instalar PostgreSQL no macOS
+
+Escolha **uma** das opções abaixo:
+
+- **Opção A – Homebrew (terminal):**
+```bash
+brew install postgresql
+brew services start postgresql   # inicia o serviço do banco
+
+# Criar um banco de dados local
+createdb meu_bancof
+psql -d meu_banco
+```
+
+- **Opção B – Postgres.app (interface gráfica):**
+- Baixe o Postgres.app em `https://postgresapp.com/`
+- Arraste para `Aplicativos` e abra o app
+- Crie um banco de dados pela interface e use as credenciais fornecidas pelo Postgres.app
+
+### 6. Configurar o arquivo `.env` no macOS
+
+No diretório raiz do projeto, crie (ou edite) o arquivo `.env`:
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=meu_banco
+DB_USER=seu_usuario
+DB_PASSWORD=sua_senha
+```
+
+Se estiver usando o Postgres instalado via Homebrew, normalmente o usuário padrão é o seu usuário do macOS (sem senha). Nesse caso, você pode deixar `DB_PASSWORD` vazio ou configurar uma senha via `psql`, conforme sua política de segurança.
+
+### 7. Executar o projeto no macOS
+
+- **Usando Poetry (recomendado):**
+```bash
+cd Importa-planilha-postgresql
+poetry install
+poetry run python src/main.py
+```
+
+- **Usando pip (sem Poetry):**
+```bash
+cd Importa-planilha-postgresql
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python src/main.py
+```
+
 ## 🐛 Problemas Comuns
 
 ### ❌ Erro de Conexão com PostgreSQL
