@@ -2,11 +2,25 @@
 
 🚀 **Ferramenta completa para importar planilhas Excel/CSV para PostgreSQL**
 
-Este projeto permite importar dados de planilhas diretamente para o PostgreSQL, gerenciar metadados de tabelas e colunas, e trabalhar com dados geoespaciais de forma simples e eficiente.
+Este projeto permite importar dados de planilhas diretamente para o PostgreSQL, gerenciar metadados de tabelas e colunas, trabalhar com dados geoespaciais e exportar backups do banco (`pg_dump`) de forma simples e eficiente.
 
 ## ⚡ Início Rápido
 
 ### 1. Instalação
+
+**Poetry não instalado?** Confira com `poetry --version`. Se o comando não existir, instale com o instalador oficial (recomendado):
+
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
+```
+
+No Windows (PowerShell):
+
+```powershell
+(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -
+```
+
+Se `py` não estiver disponível, use `python` no lugar. Ao final, siga as instruções exibidas pelo instalador para adicionar o Poetry ao `PATH`, se necessário. Alternativa: `pip install poetry` (menos isolado do sistema Python).
 
 **Opção A: Usando Poetry (Recomendado)**
 ```bash
@@ -55,6 +69,7 @@ poetry run python src/main.py
 poetry run importa-planilha          # Menu interativo
 poetry run carrega-metadados         # Gerenciar metadados
 poetry run gera-create-inserts       # Gerar scripts SQL
+poetry run exporta-backup-bd         # Backup do banco (dump + limpeza de arquivos antigos)
 ```
 
 **Usando pip (sem Poetry):**
@@ -65,6 +80,7 @@ python src/main.py
 # Executar funcionalidades específicas
 python src/carrega_metadados.py
 python src/gera_create_inserts.py
+python src/exporta_backup_bd.py
 ```
 
 ## 📋 O que este projeto faz
@@ -99,6 +115,11 @@ python src/gera_create_inserts.py
 - Transposição de dados
 - Ferramentas específicas para planilhas de RH
 
+**6. Backup do banco de dados**
+- Exporta dump em formato customizado (`pg_dump -Fc`) para a pasta `backup_bd_flonaca/`
+- Remove automaticamente arquivos de backup locais com mais de 15 dias
+- Requer `pg_dump` no `PATH` (cliente PostgreSQL instalado)
+
 ## 🗂️ Estrutura do Projeto
 
 ```
@@ -108,6 +129,7 @@ Importa-planilha-postgresql/
 │   ├── carrega_metadados.py # Gerenciamento de metadados
 │   ├── conexao.py         # Conexão com banco
 │   ├── gera_create_inserts.py
+│   ├── exporta_backup_bd.py  # Backup pg_dump + limpeza de dumps antigos
 │   ├── executa_arquivo_sql.py
 │   ├── gerar_raster.py
 │   ├── importa_raster_separado.py
@@ -158,6 +180,36 @@ python src/main.py
 - 🗺️ Dados Geoespaciais
 - 🛠️ Ferramentas Auxiliares
 - ❓ Ajuda
+- 💾 Exportar backup do banco de dados
+- 🚪 Sair
+
+### 💾 Exportar backup do banco de dados
+
+**Para gerar um dump local e limpar backups antigos:**
+
+**Método 1: Menu interativo (recomendado)**
+```bash
+# Usando Poetry
+poetry run python src/main.py
+# Escolha opção 6 no menu
+
+# Usando pip
+python src/main.py
+# Escolha opção 6 no menu
+```
+
+**Método 2: Execução direta**
+```bash
+# Usando Poetry
+poetry run python src/exporta_backup_bd.py
+# ou
+poetry run exporta-backup-bd
+
+# Usando pip
+python src/exporta_backup_bd.py
+```
+
+Os arquivos são gravados em `backup_bd_flonaca/` (nome com data e hora). É necessário ter o cliente PostgreSQL instalado para que o comando `pg_dump` esteja disponível no terminal.
 
 ### 📄 Gerar Scripts SQL de Planilhas
 
@@ -295,6 +347,13 @@ poetry run python tools/junta_guias_planilha.py
 
 # Usando pip
 python tools/junta_guias_planilha.py
+
+# Executar um arquivo SQL no banco configurado no .env
+# Usando Poetry
+poetry run python src/executa_arquivo_sql.py
+
+# Usando pip
+python src/executa_arquivo_sql.py
 ```
 
 ### 🗺️ Dados Geoespaciais
@@ -328,6 +387,9 @@ python src/importa_raster_unidos.py
 **Obrigatórios:**
 - **Python 3.8+** instalado
 - **PostgreSQL** configurado e rodando
+
+**Para exportar backup pelo script (`exporta_backup_bd.py`):**
+- **Cliente PostgreSQL** com `pg_dump` no `PATH` (no macOS com Homebrew: `brew install libpq` e siga a dica do `brew` para o `PATH`, ou use a instalação completa do PostgreSQL)
 
 **Para usar Poetry (recomendado):**
 - **Poetry** instalado ([como instalar](https://python-poetry.org/docs/#installation))
@@ -407,7 +469,7 @@ brew install postgresql
 brew services start postgresql   # inicia o serviço do banco
 
 # Criar um banco de dados local
-createdb meu_bancof
+createdb meu_banco
 psql -d meu_banco
 ```
 
@@ -480,6 +542,10 @@ pip install -r requirements-dev.txt --force-reinstall
 - Execute sempre da pasta `src/` ou use os scripts do Poetry
 - Os imports relativos funcionam apenas dentro de `src/`
 - Se usar pip, execute `python src/arquivo.py` em vez de `python arquivo.py`
+
+### ❌ Backup: `pg_dump` não encontrado
+- Instale o cliente PostgreSQL ou adicione o diretório dos binários (`pg_dump`) ao `PATH`
+- Confirme com `which pg_dump` (Linux/macOS) ou `where pg_dump` (Windows)
 
 ## 📄 Licença
 

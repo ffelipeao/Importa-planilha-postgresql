@@ -15,6 +15,7 @@ def mostrar_menu():
     print("3. 🗺️  Dados Geoespaciais")
     print("4. 🛠️  Ferramentas Auxiliares")
     print("5. ❓ Ajuda")
+    print("6. 💾 Exportar backup do banco de dados")
     print("0. 🚪 Sair")
     print("=" * 60)
 
@@ -47,6 +48,20 @@ def executar_gera_sql():
         print("❌ Erro ao executar geração de scripts SQL")
     except FileNotFoundError:
         print("❌ Arquivo gera_create_inserts.py não encontrado")
+
+def executar_exporta_backup():
+    """Exporta dump do PostgreSQL e remove backups locais muito antigos."""
+    print("\n💾 EXPORTAR BACKUP DO BANCO DE DADOS")
+    print("-" * 40)
+    print("Gera um arquivo .dump (pg_dump -Fc) em backup_bd_flonaca/")
+    print("e remove backups com mais de 15 dias na mesma pasta.")
+    print()
+    try:
+        subprocess.run([sys.executable, "src/exporta_backup_bd.py"], check=True)
+    except subprocess.CalledProcessError:
+        print("❌ Erro ao executar exporta_backup_bd.py")
+    except FileNotFoundError:
+        print("❌ Arquivo exporta_backup_bd.py não encontrado")
 
 def mostrar_geoespaciais():
     """Mostra opções de dados geoespaciais"""
@@ -90,7 +105,6 @@ def mostrar_ferramentas():
     print("3. Transpor Planilha RH - Dados Superficiais")
     print("4. Transpor Planilha RH - Dados Subterrâneos")
     print("5. Executar Arquivo SQL")
-    print("6. Exportar backup do banco de dados")
     print("0. Voltar ao menu principal")
     
     opcao = input("\nDigite sua escolha: ").strip()
@@ -101,7 +115,6 @@ def mostrar_ferramentas():
         "3": "tools/transpor_planilha_RH_dados_superficiais.py",
         "4": "tools/transpor_planilha_RH_dados_subteraneo.py",
         "5": "src/executa_arquivo_sql.py",
-        "6": "src/exporta_backup_bd.py",
     }
     
     if opcao in scripts:
@@ -126,11 +139,13 @@ def mostrar_ajuda():
     print("• poetry run python src/main.py")
     print("• poetry run python src/carrega_metadados.py")
     print("• poetry run python src/gera_create_inserts.py")
+    print("• poetry run python src/exporta_backup_bd.py")
     print()
     print("📦 Scripts do Poetry:")
     print("• poetry run importa-planilha")
     print("• poetry run carrega-metadados")
     print("• poetry run gera-create-inserts")
+    print("• poetry run exporta-backup-bd")
     print()
     print("🐛 Problemas comuns:")
     print("• Verifique se o PostgreSQL está rodando")
@@ -161,7 +176,7 @@ def verificar_configuracao():
 
 def main():
     """Função principal do sistema"""
-    print("🚀 Iniciando Importador de Planilhas PostgreSQL...")
+    print("0Iniciando Importador de Planilhas PostgreSQL...")
     
     # Verificar configuração
     if not verificar_configuracao():

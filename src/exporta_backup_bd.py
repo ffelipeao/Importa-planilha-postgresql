@@ -122,8 +122,14 @@ def validar_e_limpar_backups_antigos(dias=15):
     return removidos
 
 
-if __name__ == "__main__":
+def main():
+    """Ponto de entrada para CLI e para `poetry run exporta-backup-bd`."""
     print("Iniciando exportação do dump...")
     exportar_dump()
     print("\nVerificando backups antigos (mais de 15 dias)...")
     validar_e_limpar_backups_antigos(15)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
