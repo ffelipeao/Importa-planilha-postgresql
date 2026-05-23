@@ -136,13 +136,23 @@ deactivate
 ### Menu Interativo
 ```bash
 python src/main.py
-# Escolha uma opção no menu:
-# 1. Gerenciar Metadados de Tabelas
-# 2. Gerar Scripts SQL (CREATE + INSERT)
-# 3. Dados Geoespaciais
-# 4. Ferramentas Auxiliares
-# 5. Ajuda
 ```
+
+Menu principal:
+
+| Opção | Função |
+|-------|--------|
+| **1** | Gerenciar metadados de tabelas |
+| **2** | Gerar scripts SQL (CREATE + INSERT) |
+| **3** | Exportar backup do banco de dados |
+| **4** | Dados geoespaciais (submenu) |
+| **5** | Ferramentas auxiliares (submenu) |
+| **6** | Ajuda |
+| **0** | Sair |
+
+Submenu **4** (geoespaciais): 1 Gerar raster · 2 Importar separado · 3 Importar unido · 0 Voltar  
+
+Submenu **5** (ferramentas): 1 Juntar planilhas · 2 Juntar guias · 3–4 Transpor RH · 5 Executar SQL · 0 Voltar
 
 ### Gerenciar Metadados
 ```bash
@@ -161,6 +171,15 @@ python src/carrega_metadados.py --auto-confirm
 # Executar diretamente
 python src/gera_create_inserts.py
 # Seleciona arquivos Excel/CSV e gera scripts SQL automaticamente
+```
+
+### Exportar backup do banco
+```bash
+# Menu: opção 3
+python src/main.py
+
+# Ou diretamente (requer pg_dump no PATH)
+python src/exporta_backup_bd.py
 ```
 
 ### Ferramentas Auxiliares

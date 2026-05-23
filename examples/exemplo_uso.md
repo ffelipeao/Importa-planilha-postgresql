@@ -13,62 +13,99 @@ Importa-planilha-postgresql/
 └── poetry.lock           # Lock file Poetry
 ```
 
-## 📋 Como Executar
+## 📋 Menu interativo
 
-### Importar Planilha
+Execute na raiz do projeto:
+
 ```bash
 poetry run python src/main.py
+# ou
+poetry run importa-planilha
 ```
 
-### Gerenciar Metadados
+### Menu principal
+
+| Opção | Função |
+|-------|--------|
+| **1** | Gerenciar metadados de tabelas |
+| **2** | Gerar scripts SQL (CREATE + INSERT) |
+| **3** | Exportar backup do banco de dados |
+| **4** | Dados geoespaciais (submenu) |
+| **5** | Ferramentas auxiliares (submenu) |
+| **6** | Ajuda |
+| **0** | Sair |
+
+### Submenu 4 — Dados geoespaciais
+
+| Opção | Função |
+|-------|--------|
+| **1** | Gerar raster |
+| **2** | Importar raster separado |
+| **3** | Importar raster unido |
+| **0** | Voltar |
+
+### Submenu 5 — Ferramentas auxiliares
+
+| Opção | Função |
+|-------|--------|
+| **1** | Juntar planilhas |
+| **2** | Juntar guias de planilha |
+| **3** | Transpor planilha RH — superficiais |
+| **4** | Transpor planilha RH — subterrâneos |
+| **5** | Executar arquivo SQL |
+| **0** | Voltar |
+
+## 📋 Comandos diretos (sem menu)
+
+### Metadados e SQL
+
 ```bash
 poetry run python src/carrega_metadados.py
-```
-
-### Usando Scripts do Poetry
-```bash
-poetry run importa-planilha
+poetry run python src/gera_create_inserts.py
+# ou
 poetry run carrega-metadados
+poetry run gera-create-inserts
 ```
 
-## 🔧 Ferramentas Auxiliares
-
-As ferramentas de RH estão agora em `tools/`:
+### Backup do banco
 
 ```bash
-# Junção de planilhas
-poetry run python tools/junta_planilhas.py
+poetry run python src/exporta_backup_bd.py
+# ou
+poetry run exporta-backup-bd
+```
 
-# Transposição de dados RH
+Dumps em `backup_bd_flonaca/`; arquivos com mais de 15 dias são removidos automaticamente.
+
+## 🔧 Ferramentas auxiliares
+
+As ferramentas de RH estão em `tools/` (também acessíveis pelo menu, opção **5**):
+
+```bash
+poetry run python tools/junta_planilhas.py
+poetry run python tools/junta_guias_planilha.py
 poetry run python tools/transpor_planilha_RH_dados_superficiais.py
 poetry run python tools/transpor_planilha_RH_dados_subteraneo.py
-
-# Junção de guias de planilha
-poetry run python tools/junta_guias_planilha.py
+poetry run python src/executa_arquivo_sql.py
 ```
 
-## 🗺️ Dados Geoespaciais
+## 🗺️ Dados geoespaciais
+
+Também pelo menu, opção **4**:
 
 ```bash
-# Gerar raster
 poetry run python src/gerar_raster.py
-
-# Importar raster separado
 poetry run python src/importa_raster_separado.py
-
-# Importar raster unido
 poetry run python src/importa_raster_unidos.py
 ```
 
-## 📊 Template de Metadados
+## 📊 Template de configuração
 
-Use o arquivo `examples/config_exemplo.env` como modelo para criar seu `.env`.
+Use `examples/config_exemplo.env` como modelo para criar o `.env` na raiz do projeto.
 
-## 🎯 Vantagens da Nova Estrutura
+## 🎯 Vantagens da estrutura
 
-- ✅ **Organização clara** - Código principal separado de ferramentas
-- ✅ **Fácil navegação** - Estrutura simples e lógica
-- ✅ **Exemplos organizados** - Templates e configurações em um local
-- ✅ **Manutenção facilitada** - Separação de responsabilidades
-- ✅ **Estrutura limpa** - Sem links simbólicos desnecessários
-- ✅ **Compatibilidade mantida** - Funciona com Poetry e imports relativos
+- ✅ **Organização clara** — código principal separado de ferramentas
+- ✅ **Menu único** — todas as funções acessíveis por `src/main.py`
+- ✅ **Exemplos organizados** — templates e configurações em `examples/`
+- ✅ **Compatibilidade** — Poetry (`poetry run …`) ou `python src/…` com pip

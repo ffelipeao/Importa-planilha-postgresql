@@ -12,10 +12,10 @@ def mostrar_menu():
     print()
     print("1. 📝 Gerenciar Metadados de Tabelas")
     print("2. 📄 Gerar Scripts SQL (CREATE + INSERT)")
-    print("3. 🗺️  Dados Geoespaciais")
-    print("4. 🛠️  Ferramentas Auxiliares")
-    print("5. ❓ Ajuda")
-    print("6. 💾 Exportar backup do banco de dados")
+    print("3. 💾 Exportar backup do banco de dados")
+    print("4. 🗺️  Dados Geoespaciais")
+    print("5. 🛠️  Ferramentas Auxiliares")
+    print("6. ❓ Ajuda")
     print("0. 🚪 Sair")
     print("=" * 60)
 
@@ -131,6 +131,22 @@ def mostrar_ajuda():
     """Mostra informações de ajuda"""
     print("\n❓ AJUDA")
     print("-" * 40)
+    print("📋 Menu principal:")
+    print("  1 - Gerenciar metadados de tabelas")
+    print("  2 - Gerar scripts SQL (CREATE + INSERT)")
+    print("  3 - Exportar backup do banco de dados")
+    print("  4 - Dados geoespaciais (submenu)")
+    print("  5 - Ferramentas auxiliares (submenu)")
+    print("  6 - Esta ajuda")
+    print("  0 - Sair")
+    print()
+    print("  Submenu 4 (geoespaciais): 1 Gerar raster | 2 Importar separado")
+    print("                            | 3 Importar unido | 0 Voltar")
+    print("  Submenu 5 (ferramentas):  1 Juntar planilhas | 2 Juntar guias")
+    print("                            | 3 Transpor RH superficiais")
+    print("                            | 4 Transpor RH subterrâneos")
+    print("                            | 5 Executar arquivo SQL | 0 Voltar")
+    print()
     print("📖 Documentação completa: README.md")
     print("📋 Exemplos de uso: examples/exemplo_uso.md")
     print("⚙️  Template de configuração: examples/config_exemplo.env")
@@ -176,7 +192,7 @@ def verificar_configuracao():
 
 def main():
     """Função principal do sistema"""
-    print("0Iniciando Importador de Planilhas PostgreSQL...")
+    print("🚀 Iniciando Importador de Planilhas PostgreSQL...")
     
     # Verificar configuração
     if not verificar_configuracao():
@@ -192,10 +208,12 @@ def main():
         elif opcao == "2":
             executar_gera_sql()
         elif opcao == "3":
-            mostrar_geoespaciais()
+            executar_exporta_backup()
         elif opcao == "4":
-            mostrar_ferramentas()
+            mostrar_geoespaciais()
         elif opcao == "5":
+            mostrar_ferramentas()
+        elif opcao == "6":
             mostrar_ajuda()
         elif opcao == "0":
             print("\n👋 Obrigado por usar o Importador de Planilhas PostgreSQL!")

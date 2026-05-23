@@ -174,14 +174,37 @@ poetry run python src/main.py
 python src/main.py
 ```
 
-**O menu oferece as seguintes opções:**
-- 📝 Gerenciar Metadados de Tabelas  
-- 📄 Gerar Scripts SQL (CREATE + INSERT)
-- 🗺️ Dados Geoespaciais
-- 🛠️ Ferramentas Auxiliares
-- ❓ Ajuda
-- 💾 Exportar backup do banco de dados
-- 🚪 Sair
+**Menu principal** (`python src/main.py` ou `poetry run importa-planilha`):
+
+| Opção | Função |
+|-------|--------|
+| **1** | 📝 Gerenciar metadados de tabelas |
+| **2** | 📄 Gerar scripts SQL (CREATE + INSERT) |
+| **3** | 💾 Exportar backup do banco de dados |
+| **4** | 🗺️ Dados geoespaciais (abre submenu) |
+| **5** | 🛠️ Ferramentas auxiliares (abre submenu) |
+| **6** | ❓ Ajuda (mapa do menu e comandos) |
+| **0** | 🚪 Sair |
+
+**Submenu 4 — Dados geoespaciais**
+
+| Opção | Função |
+|-------|--------|
+| **1** | Gerar raster |
+| **2** | Importar raster separado |
+| **3** | Importar raster unido |
+| **0** | Voltar ao menu principal |
+
+**Submenu 5 — Ferramentas auxiliares**
+
+| Opção | Função |
+|-------|--------|
+| **1** | Juntar planilhas |
+| **2** | Juntar guias de planilha |
+| **3** | Transpor planilha RH — dados superficiais |
+| **4** | Transpor planilha RH — dados subterrâneos |
+| **5** | Executar arquivo SQL |
+| **0** | Voltar ao menu principal |
 
 ### 💾 Exportar backup do banco de dados
 
@@ -191,11 +214,11 @@ python src/main.py
 ```bash
 # Usando Poetry
 poetry run python src/main.py
-# Escolha opção 6 no menu
+# Escolha opção 3 no menu
 
 # Usando pip
 python src/main.py
-# Escolha opção 6 no menu
+# Escolha opção 3 no menu
 ```
 
 **Método 2: Execução direta**
