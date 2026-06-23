@@ -23,6 +23,7 @@ AMOSTRA_MEIO = 50
 AMOSTRA_FIM = 50
 AMOSTRA_ALEATORIA = 50
 LIMITE_CARACTERES_TEXTO = 20
+VARCHAR_TAMANHO_MINIMO = 1
 INT32_MIN = -2_147_483_648
 INT32_MAX = 2_147_483_647
 
@@ -460,56 +461,76 @@ def tipo_inteiro_por_magnitude(valores: Sequence) -> str:
             else:
                 numero = int(valor_para_texto(valor))
         except (ValueError, TypeError, OverflowError):
-            return 'text'
+            return inferir_varchar(valores)
         if numero < INT32_MIN or numero > INT32_MAX:
             return 'bigint'
     return 'integer'
 
 
+def tamanho_maximo_amostra(valores: Sequence) -> int:
+    tamanho_maximo = 0
+    for valor in valores:
+        if valor_vazio(valor):
+            continue
+        tamanho_maximo = max(tamanho_maximo, len(valor_para_texto(valor)))
+    return tamanho_maximo
+
+
+def valores_excedem_limite_texto(valores: Sequence) -> bool:
+    return tamanho_maximo_amostra(valores) > LIMITE_CARACTERES_TEXTO
+
+
+def inferir_varchar(valores: Sequence) -> str:
+    tamanho = max(tamanho_maximo_amostra(valores), VARCHAR_TAMANHO_MINIMO)
+    return f'varchar({tamanho})'
+
+
+def tipo_eh_cadeia_curta(tipo_coluna: str) -> bool:
+    return bool(re.fullmatch(r'varchar\(\d+\)', tipo_coluna, flags=re.IGNORECASE))
+
+
 def combinar_categorias(categorias: Set[CategoriaValor]) -> str:
     if not categorias or categorias == {CategoriaValor.TEXTO}:
-        return 'text'
+        return 'varchar'
 
     if CategoriaValor.TEXTO in categorias:
-        return 'text'
+        return 'varchar'
 
     if CategoriaValor.BOOLEANO in categorias:
         if categorias == {CategoriaValor.BOOLEANO}:
             return 'boolean'
-        return 'text'
+        return 'varchar'
 
     if CategoriaValor.TIMESTAMP in categorias:
         if categorias <= {CategoriaValor.TIMESTAMP, CategoriaValor.DATA}:
             return 'timestamp'
-        return 'text'
+        return 'varchar'
 
     if CategoriaValor.DATA in categorias:
         if categorias == {CategoriaValor.DATA}:
             return 'date'
         if categorias <= {CategoriaValor.DATA, CategoriaValor.TIMESTAMP}:
             return 'timestamp'
-        return 'text'
+        return 'varchar'
 
     if CategoriaValor.DECIMAL in categorias:
         if categorias <= {CategoriaValor.DECIMAL, CategoriaValor.INTEIRO}:
             return 'numeric'
-        return 'text'
+        return 'varchar'
 
     if categorias == {CategoriaValor.INTEIRO}:
         return 'integer'
 
-    return 'text'
+    return 'varchar'
 
 
 def inferir_tipo_coluna(nome_coluna: str, valores: Sequence) -> str:
     valores_validos = [valor for valor in valores if not valor_vazio(valor)]
     if not valores_validos:
-        return 'text'
+        return inferir_varchar(valores_validos)
 
-    for valor in valores_validos:
-        texto = valor_para_texto(valor)
-        if len(texto) > LIMITE_CARACTERES_TEXTO:
-            return 'text'
+    if valores_excedem_limite_texto(valores_validos):
+        return 'text'
 
     if coluna_exige_integer_por_nome(nome_coluna):
         if not valores_contem_texto_nao_numerico(valores_validos):
@@ -525,11 +546,13 @@ def inferir_tipo_coluna(nome_coluna: str, valores: Sequence) -> str:
         if not textos.issubset(VALORES_BOOLEANOS):
             categorias.discard(CategoriaValor.BOOLEANO)
             if not categorias:
-                return 'text'
+                return inferir_varchar(valores_validos)
 
     tipo = combinar_categorias(categorias)
     if tipo == 'integer':
         return tipo_inteiro_por_magnitude(valores_validos)
+    if tipo == 'varchar':
+        return inferir_varchar(valores_validos)
     return tipo
 
 
@@ -631,7 +654,7 @@ def formatar_valor_insert(
     if valor_vazio(valor):
         return 'NULL'
 
-    if usar_texto_para_todos or tipo_coluna == 'text':
+    if usar_texto_para_todos or tipo_coluna == 'text' or tipo_eh_cadeia_curta(tipo_coluna):
         return f"'{tratar_dado(valor)}'"
 
     if tipo_coluna == 'boolean':
