@@ -130,7 +130,7 @@ def perguntar_modo_tipos():
 def perguntar_validacao_completa():
     """Solicita se a inferência deve validar todas as colunas em todas as linhas."""
     print("\nValidação de tipos inferidos:")
-    print("  1 - Rápida: amostra distribuída + ajuste de VARCHAR no arquivo completo (padrão)")
+    print("  1 - Rápida: amostra na memória + ajuste de VARCHAR (padrão, mais rápida)")
     print("  2 - Completa: analisar todas as colunas em todas as linhas (pode ser mais lenta)")
     opcao = input("Informe a opção (Enter para rápida): ").strip()
     completa = opcao == '2'
@@ -333,6 +333,14 @@ def ler_amostra_para_inferencia(
     return df_amostra, colunas
 
 
+def extrair_amostra_do_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """Extrai amostra distribuída de um DataFrame já carregado."""
+    indices = selecionar_indices_amostra(len(df))
+    if not indices:
+        return df.iloc[0:0]
+    return df.iloc[indices]
+
+
 def valor_para_texto(valor) -> str:
     if isinstance(valor, datetime):
         return valor.strftime('%Y-%m-%d %H:%M:%S')
@@ -528,20 +536,6 @@ def calcular_tipo_cadeia_por_tamanho(tamanho_maximo: int) -> str:
     return f'varchar({tamanho})'
 
 
-def tamanho_maximo_coluna(df: pd.DataFrame, coluna: str) -> int:
-    if coluna not in df.columns:
-        return 0
-    tamanho_maximo = 0
-    for valor in df[coluna]:
-        if valor_vazio(valor):
-            continue
-        tamanho = len(valor_para_texto(valor))
-        if tamanho > LIMITE_CARACTERES_TEXTO:
-            return LIMITE_CARACTERES_TEXTO + 1
-        tamanho_maximo = max(tamanho_maximo, tamanho)
-    return tamanho_maximo
-
-
 def inferir_tipo_coluna_completo(df: pd.DataFrame, nome_coluna: str) -> str:
     """Inferência com saída antecipada: > limite de caracteres vira text imediatamente."""
     if nome_coluna not in df.columns:
@@ -563,12 +557,35 @@ def ajustar_tipos_pelo_dataset_completo(
     df: pd.DataFrame,
     tipos_colunas: Dict[str, str],
 ) -> Dict[str, str]:
-    """Recalcula VARCHAR/text com base em todas as linhas, evitando subestimar pela amostra."""
+    """Recalcula VARCHAR/text em uma única passagem pelas linhas do DataFrame."""
+    colunas_varchar = [
+        coluna for coluna, tipo in tipos_colunas.items()
+        if tipo_eh_cadeia_curta(tipo) and coluna in df.columns
+    ]
+    if not colunas_varchar:
+        return dict(tipos_colunas)
+
+    tamanhos_maximos = {coluna: 0 for coluna in colunas_varchar}
+    excedeu_limite = {coluna: False for coluna in colunas_varchar}
+
+    for linha in df[colunas_varchar].to_numpy():
+        for indice, valor in enumerate(linha):
+            coluna = colunas_varchar[indice]
+            if excedeu_limite[coluna] or valor_vazio(valor):
+                continue
+            tamanho = len(valor_para_texto(valor))
+            if tamanho > LIMITE_CARACTERES_TEXTO:
+                excedeu_limite[coluna] = True
+            elif tamanho > tamanhos_maximos[coluna]:
+                tamanhos_maximos[coluna] = tamanho
+
     tipos_ajustados = dict(tipos_colunas)
-    for coluna, tipo in tipos_colunas.items():
-        if not tipo_eh_cadeia_curta(tipo):
-            continue
-        tamanho_maximo = tamanho_maximo_coluna(df, coluna)
+    for coluna in colunas_varchar:
+        if excedeu_limite[coluna]:
+            tamanho_maximo = LIMITE_CARACTERES_TEXTO + 1
+        else:
+            tamanho_maximo = tamanhos_maximos[coluna]
+        tipo = tipos_colunas[coluna]
         tipo_ajustado = calcular_tipo_cadeia_por_tamanho(tamanho_maximo)
         if tipo_ajustado != tipo:
             print(
@@ -878,21 +895,13 @@ def gerar_sql(
                 else:
                     print(
                         'Modo de tipos: inferência rápida '
-                        '(amostra + ajuste de VARCHAR no arquivo completo)'
+                        '(amostra na memória + ajuste de VARCHAR em uma passagem)'
                     )
             else:
                 print('Modo de tipos: text (padrão)')
 
             tipos_colunas = None
             colunas = None
-
-            if inferir_tipos and not validacao_completa:
-                print('Coletando amostra para inferência de tipos...')
-                df_amostra, colunas = ler_amostra_para_inferencia(nome_arquivo, codificacao)
-                tipos_colunas = inferir_tipos_colunas(df_amostra, colunas)
-                print('Tipos inferidos na amostra:')
-                for coluna in colunas:
-                    print(f'  - {coluna}: {tipos_colunas[coluna]}')
 
             print('Carregando dados na memória (df).')
             df = ler_arquivo(nome_arquivo, codificacao)
@@ -902,9 +911,16 @@ def gerar_sql(
             nome_tabela = nome_arquivo_base.rsplit('.', 1)[0].lower()
             nome_tabela_formatado = format_file_name(nome_tabela)
 
-            if colunas is None:
-                colunas = normalizar_colunas(df.columns.tolist())
+            colunas = normalizar_colunas(df.columns.tolist())
             df.columns = colunas
+
+            if inferir_tipos and not validacao_completa:
+                print('Coletando amostra para inferência de tipos (na memória)...')
+                df_amostra = extrair_amostra_do_dataframe(df)
+                tipos_colunas = inferir_tipos_colunas(df_amostra, colunas)
+                print('Tipos inferidos na amostra:')
+                for coluna in colunas:
+                    print(f'  - {coluna}: {tipos_colunas[coluna]}')
 
             if inferir_tipos and validacao_completa:
                 print(
@@ -916,7 +932,7 @@ def gerar_sql(
                 for coluna in colunas:
                     print(f'  - {coluna}: {tipos_colunas[coluna]}')
             elif inferir_tipos and tipos_colunas is not None:
-                print('Validando tamanhos VARCHAR no dataset completo...')
+                print('Ajustando tamanhos VARCHAR (uma passagem pelo arquivo)...')
                 tipos_colunas = ajustar_tipos_pelo_dataset_completo(df, tipos_colunas)
                 print('Tipos finais para CREATE TABLE:')
                 for coluna in colunas:
