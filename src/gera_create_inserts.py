@@ -24,6 +24,7 @@ AMOSTRA_FIM = 50
 AMOSTRA_ALEATORIA = 50
 LIMITE_CARACTERES_TEXTO = 20
 VARCHAR_TAMANHO_MINIMO = 1
+VARCHAR_MARGEM_SEGURANCA = 2
 INT32_MIN = -2_147_483_648
 INT32_MAX = 2_147_483_647
 
@@ -480,9 +481,49 @@ def valores_excedem_limite_texto(valores: Sequence) -> bool:
     return tamanho_maximo_amostra(valores) > LIMITE_CARACTERES_TEXTO
 
 
-def inferir_varchar(valores: Sequence) -> str:
-    tamanho = max(tamanho_maximo_amostra(valores), VARCHAR_TAMANHO_MINIMO)
+def inferir_varchar(valores: Sequence, tamanho_maximo: Optional[int] = None) -> str:
+    if tamanho_maximo is None:
+        tamanho_maximo = tamanho_maximo_amostra(valores)
+    return calcular_tipo_cadeia_por_tamanho(tamanho_maximo)
+
+
+def calcular_tipo_cadeia_por_tamanho(tamanho_maximo: int) -> str:
+    if tamanho_maximo > LIMITE_CARACTERES_TEXTO:
+        return 'text'
+    tamanho = max(tamanho_maximo + VARCHAR_MARGEM_SEGURANCA, VARCHAR_TAMANHO_MINIMO)
+    tamanho = min(tamanho, LIMITE_CARACTERES_TEXTO)
     return f'varchar({tamanho})'
+
+
+def tamanho_maximo_coluna(df: pd.DataFrame, coluna: str) -> int:
+    if coluna not in df.columns:
+        return 0
+    tamanho_maximo = 0
+    for valor in df[coluna]:
+        if valor_vazio(valor):
+            continue
+        tamanho_maximo = max(tamanho_maximo, len(valor_para_texto(valor)))
+    return tamanho_maximo
+
+
+def ajustar_tipos_pelo_dataset_completo(
+    df: pd.DataFrame,
+    tipos_colunas: Dict[str, str],
+) -> Dict[str, str]:
+    """Recalcula VARCHAR/text com base em todas as linhas, evitando subestimar pela amostra."""
+    tipos_ajustados = dict(tipos_colunas)
+    for coluna, tipo in tipos_colunas.items():
+        if not tipo_eh_cadeia_curta(tipo):
+            continue
+        tamanho_maximo = tamanho_maximo_coluna(df, coluna)
+        tipo_ajustado = calcular_tipo_cadeia_por_tamanho(tamanho_maximo)
+        if tipo_ajustado != tipo:
+            print(
+                f'  - {coluna}: {tipo} -> {tipo_ajustado} '
+                f'(tamanho máximo no arquivo: {tamanho_maximo})'
+            )
+        tipos_ajustados[coluna] = tipo_ajustado
+    return tipos_ajustados
 
 
 def tipo_eh_cadeia_curta(tipo_coluna: str) -> bool:
@@ -756,7 +797,7 @@ def gerar_sql(
                 print('Coletando amostra para inferência de tipos...')
                 df_amostra, colunas = ler_amostra_para_inferencia(nome_arquivo, codificacao)
                 tipos_colunas = inferir_tipos_colunas(df_amostra, colunas)
-                print('Tipos inferidos:')
+                print('Tipos inferidos na amostra:')
                 for coluna in colunas:
                     print(f'  - {coluna}: {tipos_colunas[coluna]}')
 
@@ -771,6 +812,13 @@ def gerar_sql(
             if colunas is None:
                 colunas = normalizar_colunas(df.columns.tolist())
             df.columns = colunas
+
+            if inferir_tipos and tipos_colunas is not None:
+                print('Validando tamanhos VARCHAR no dataset completo...')
+                tipos_colunas = ajustar_tipos_pelo_dataset_completo(df, tipos_colunas)
+                print('Tipos finais para CREATE TABLE:')
+                for coluna in colunas:
+                    print(f'  - {coluna}: {tipos_colunas[coluna]}')
 
             print('Gerando CREATE TABLE...')
             create_sql = gerar_create_table(
