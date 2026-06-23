@@ -22,7 +22,7 @@ AMOSTRA_INICIO = 50
 AMOSTRA_MEIO = 50
 AMOSTRA_FIM = 50
 AMOSTRA_ALEATORIA = 50
-LIMITE_CARACTERES_TEXTO = 20
+LIMITE_CARACTERES_TEXTO = 50
 VARCHAR_TAMANHO_MINIMO = 1
 VARCHAR_MARGEM_SEGURANCA = 2
 INT32_MIN = -2_147_483_648
@@ -125,6 +125,18 @@ def perguntar_modo_tipos():
     modo = 'inferência automática' if inferir else 'text'
     print(f'Modo selecionado: {modo}')
     return inferir
+
+
+def perguntar_validacao_completa():
+    """Solicita se a inferência deve validar todas as colunas em todas as linhas."""
+    print("\nValidação de tipos inferidos:")
+    print("  1 - Rápida: amostra distribuída + ajuste de VARCHAR no arquivo completo (padrão)")
+    print("  2 - Completa: analisar todas as colunas em todas as linhas (pode ser mais lenta)")
+    opcao = input("Informe a opção (Enter para rápida): ").strip()
+    completa = opcao == '2'
+    modo = 'validação completa' if completa else 'validação rápida'
+    print(f'Validação selecionada: {modo}')
+    return completa
 
 
 def perguntar_schema(padrao='dados_gts'):
@@ -487,10 +499,21 @@ def inferir_varchar(valores: Sequence, tamanho_maximo: Optional[int] = None) -> 
     return calcular_tipo_cadeia_por_tamanho(tamanho_maximo)
 
 
+def arredondar_tamanho_varchar(tamanho: int) -> int:
+    """Arredonda VARCHAR para a dezena superior; abaixo de 10 mantém o valor exato."""
+    tamanho = max(tamanho, VARCHAR_TAMANHO_MINIMO)
+    if tamanho < 10:
+        return tamanho
+    return ((tamanho + 9) // 10) * 10
+
+
 def calcular_tipo_cadeia_por_tamanho(tamanho_maximo: int) -> str:
     if tamanho_maximo > LIMITE_CARACTERES_TEXTO:
         return 'text'
     tamanho = max(tamanho_maximo + VARCHAR_MARGEM_SEGURANCA, VARCHAR_TAMANHO_MINIMO)
+    if tamanho > LIMITE_CARACTERES_TEXTO:
+        return 'text'
+    tamanho = arredondar_tamanho_varchar(tamanho)
     tamanho = min(tamanho, LIMITE_CARACTERES_TEXTO)
     return f'varchar({tamanho})'
 
@@ -524,6 +547,29 @@ def ajustar_tipos_pelo_dataset_completo(
             )
         tipos_ajustados[coluna] = tipo_ajustado
     return tipos_ajustados
+
+
+def validar_tipos_pelo_dataset_completo(
+    df: pd.DataFrame,
+    colunas: Sequence[str],
+    tipos_referencia: Optional[Dict[str, str]] = None,
+) -> Dict[str, str]:
+    """Reinfere tipos de todas as colunas usando todas as linhas do arquivo."""
+    total_colunas = len(colunas)
+    tipos_validados = {}
+
+    for indice, coluna in enumerate(colunas, start=1):
+        valores = df[coluna].tolist() if coluna in df.columns else []
+        tipo_novo = inferir_tipo_coluna(coluna, valores)
+        tipo_anterior = tipos_referencia.get(coluna) if tipos_referencia else None
+        if tipo_anterior and tipo_anterior != tipo_novo:
+            print(f'  - {coluna}: {tipo_anterior} -> {tipo_novo}')
+        tipos_validados[coluna] = tipo_novo
+
+        if total_colunas >= 20 and (indice % 20 == 0 or indice == total_colunas):
+            print(f'  Progresso da validação completa: {indice}/{total_colunas} colunas')
+
+    return tipos_validados
 
 
 def tipo_eh_cadeia_curta(tipo_coluna: str) -> bool:
@@ -780,20 +826,33 @@ def gerar_sql(
     nome_schema,
     codificacao='utf-8',
     inferir_tipos=False,
+    validacao_completa=False,
 ):
+    if validacao_completa:
+        inferir_tipos = True
+
     for nome_arquivo in file_list:
         try:
             print('Preparando dados do arquivo:', nome_arquivo)
             print('Codificação selecionada:', codificacao)
-            print(
-                'Modo de tipos:',
-                'inferência automática' if inferir_tipos else 'text (padrão)',
-            )
+            if inferir_tipos:
+                if validacao_completa:
+                    print(
+                        'Modo de tipos: inferência com validação completa '
+                        '(todas as colunas e linhas — pode ser mais lenta)'
+                    )
+                else:
+                    print(
+                        'Modo de tipos: inferência rápida '
+                        '(amostra + ajuste de VARCHAR no arquivo completo)'
+                    )
+            else:
+                print('Modo de tipos: text (padrão)')
 
             tipos_colunas = None
             colunas = None
 
-            if inferir_tipos:
+            if inferir_tipos and not validacao_completa:
                 print('Coletando amostra para inferência de tipos...')
                 df_amostra, colunas = ler_amostra_para_inferencia(nome_arquivo, codificacao)
                 tipos_colunas = inferir_tipos_colunas(df_amostra, colunas)
@@ -813,7 +872,16 @@ def gerar_sql(
                 colunas = normalizar_colunas(df.columns.tolist())
             df.columns = colunas
 
-            if inferir_tipos and tipos_colunas is not None:
+            if inferir_tipos and validacao_completa:
+                print(
+                    'Validação completa de tipos em todas as colunas '
+                    '(pode ser mais lenta)...'
+                )
+                tipos_colunas = validar_tipos_pelo_dataset_completo(df, colunas, tipos_colunas)
+                print('Tipos finais para CREATE TABLE:')
+                for coluna in colunas:
+                    print(f'  - {coluna}: {tipos_colunas[coluna]}')
+            elif inferir_tipos and tipos_colunas is not None:
                 print('Validando tamanhos VARCHAR no dataset completo...')
                 tipos_colunas = ajustar_tipos_pelo_dataset_completo(df, tipos_colunas)
                 print('Tipos finais para CREATE TABLE:')
@@ -873,6 +941,7 @@ Exemplos de uso:
   python gera_create_inserts.py -c 2                         # CSV em ISO-8859-1 (Latin-1)
   python gera_create_inserts.py -c windows-1252              # CSV em Windows-1252
   python gera_create_inserts.py --inferir-tipos              # Inferir tipos no CREATE TABLE
+  python gera_create_inserts.py --validacao-completa         # Validação completa (mais lenta)
   python gera_create_inserts.py --perguntar-tipos            # Escolher modo de tipos interativamente
   python gera_create_inserts.py -s dados_gts                 # Schema sem prompt interativo
 
@@ -912,6 +981,18 @@ Codificações aceitas:
     )
 
     parser.add_argument(
+        '--validacao-completa',
+        action='store_true',
+        help='Valida tipos inferidos em todas as colunas e linhas (mais lenta, mais segura)'
+    )
+
+    parser.add_argument(
+        '--perguntar-validacao',
+        action='store_true',
+        help='Solicita interativamente o modo de validação dos tipos inferidos'
+    )
+
+    parser.add_argument(
         '-s', '--schema',
         type=str,
         default=None,
@@ -928,7 +1009,12 @@ Codificações aceitas:
     if args.perguntar_tipos:
         inferir_tipos = perguntar_modo_tipos()
     else:
-        inferir_tipos = args.inferir_tipos
+        inferir_tipos = args.inferir_tipos or args.validacao_completa
+
+    if inferir_tipos and args.perguntar_validacao:
+        validacao_completa = perguntar_validacao_completa()
+    else:
+        validacao_completa = args.validacao_completa
 
     if args.schema:
         nome_schema = args.schema
@@ -951,7 +1037,13 @@ Codificações aceitas:
     if file_list:
         print('Gerando dados para o schema:', nome_schema)
 
-        gerar_sql(list(file_list), nome_schema, codificacao, inferir_tipos)
+        gerar_sql(
+            list(file_list),
+            nome_schema,
+            codificacao,
+            inferir_tipos,
+            validacao_completa,
+        )
 
         print('Gerado com sucesso!!!')
         hora_fim = dt_module.datetime.now()

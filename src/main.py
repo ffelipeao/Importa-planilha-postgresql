@@ -42,6 +42,7 @@ def executar_gera_sql():
     print("Cria arquivos CREATE TABLE e INSERT prontos para execução")
     print("Para arquivos CSV, será solicitada a codificação de leitura")
     print("Também será possível escolher entre text ou inferência automática de tipos")
+    print("Com inferência, é possível usar validação completa (mais lenta e mais segura)")
     print("O schema PostgreSQL de destino também será solicitado")
     print()
     
@@ -52,6 +53,7 @@ def executar_gera_sql():
                 "src/gera_create_inserts.py",
                 "--perguntar-codificacao",
                 "--perguntar-tipos",
+                "--perguntar-validacao",
             ],
             check=True,
         )
