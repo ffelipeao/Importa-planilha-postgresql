@@ -489,8 +489,18 @@ def tamanho_maximo_amostra(valores: Sequence) -> int:
     return tamanho_maximo
 
 
+def coluna_excede_limite_texto(valores: Sequence) -> bool:
+    """Verifica se algum valor ultrapassa o limite; interrompe na primeira ocorrência."""
+    for valor in valores:
+        if valor_vazio(valor):
+            continue
+        if len(valor_para_texto(valor)) > LIMITE_CARACTERES_TEXTO:
+            return True
+    return False
+
+
 def valores_excedem_limite_texto(valores: Sequence) -> bool:
-    return tamanho_maximo_amostra(valores) > LIMITE_CARACTERES_TEXTO
+    return coluna_excede_limite_texto(valores)
 
 
 def inferir_varchar(valores: Sequence, tamanho_maximo: Optional[int] = None) -> str:
@@ -525,8 +535,28 @@ def tamanho_maximo_coluna(df: pd.DataFrame, coluna: str) -> int:
     for valor in df[coluna]:
         if valor_vazio(valor):
             continue
-        tamanho_maximo = max(tamanho_maximo, len(valor_para_texto(valor)))
+        tamanho = len(valor_para_texto(valor))
+        if tamanho > LIMITE_CARACTERES_TEXTO:
+            return LIMITE_CARACTERES_TEXTO + 1
+        tamanho_maximo = max(tamanho_maximo, tamanho)
     return tamanho_maximo
+
+
+def inferir_tipo_coluna_completo(df: pd.DataFrame, nome_coluna: str) -> str:
+    """Inferência com saída antecipada: > limite de caracteres vira text imediatamente."""
+    if nome_coluna not in df.columns:
+        return inferir_varchar([])
+
+    valores_validos = []
+    for valor in df[nome_coluna]:
+        if valor_vazio(valor):
+            continue
+        texto = valor_para_texto(valor)
+        if len(texto) > LIMITE_CARACTERES_TEXTO:
+            return 'text'
+        valores_validos.append(valor)
+
+    return inferir_tipo_coluna(nome_coluna, valores_validos)
 
 
 def ajustar_tipos_pelo_dataset_completo(
@@ -559,8 +589,7 @@ def validar_tipos_pelo_dataset_completo(
     tipos_validados = {}
 
     for indice, coluna in enumerate(colunas, start=1):
-        valores = df[coluna].tolist() if coluna in df.columns else []
-        tipo_novo = inferir_tipo_coluna(coluna, valores)
+        tipo_novo = inferir_tipo_coluna_completo(df, coluna)
         tipo_anterior = tipos_referencia.get(coluna) if tipos_referencia else None
         if tipo_anterior and tipo_anterior != tipo_novo:
             print(f'  - {coluna}: {tipo_anterior} -> {tipo_novo}')
@@ -612,12 +641,17 @@ def combinar_categorias(categorias: Set[CategoriaValor]) -> str:
 
 
 def inferir_tipo_coluna(nome_coluna: str, valores: Sequence) -> str:
-    valores_validos = [valor for valor in valores if not valor_vazio(valor)]
+    valores_validos = []
+    for valor in valores:
+        if valor_vazio(valor):
+            continue
+        texto = valor_para_texto(valor)
+        if len(texto) > LIMITE_CARACTERES_TEXTO:
+            return 'text'
+        valores_validos.append(valor)
+
     if not valores_validos:
         return inferir_varchar(valores_validos)
-
-    if valores_excedem_limite_texto(valores_validos):
-        return 'text'
 
     if coluna_exige_integer_por_nome(nome_coluna):
         if not valores_contem_texto_nao_numerico(valores_validos):
