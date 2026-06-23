@@ -40,10 +40,14 @@ def executar_gera_sql():
     print("-" * 40)
     print("Esta função converte planilhas em scripts SQL completos")
     print("Cria arquivos CREATE TABLE e INSERT prontos para execução")
+    print("Para arquivos CSV, será solicitada a codificação de leitura")
     print()
     
     try:
-        subprocess.run([sys.executable, "src/gera_create_inserts.py"], check=True)
+        subprocess.run(
+            [sys.executable, "src/gera_create_inserts.py", "--perguntar-codificacao"],
+            check=True,
+        )
     except subprocess.CalledProcessError:
         print("❌ Erro ao executar geração de scripts SQL")
     except FileNotFoundError:
@@ -133,7 +137,7 @@ def mostrar_ajuda():
     print("-" * 40)
     print("📋 Menu principal:")
     print("  1 - Gerenciar metadados de tabelas")
-    print("  2 - Gerar scripts SQL (CREATE + INSERT)")
+    print("  2 - Gerar scripts SQL (CREATE + INSERT) — solicita codificação para CSV")
     print("  3 - Exportar backup do banco de dados")
     print("  4 - Dados geoespaciais (submenu)")
     print("  5 - Ferramentas auxiliares (submenu)")
@@ -155,6 +159,8 @@ def mostrar_ajuda():
     print("• poetry run python src/main.py")
     print("• poetry run python src/carrega_metadados.py")
     print("• poetry run python src/gera_create_inserts.py")
+    print("• poetry run python src/gera_create_inserts.py -c iso-8859-1  # codificação CSV")
+    print("• poetry run python src/gera_create_inserts.py --help")
     print("• poetry run python src/exporta_backup_bd.py")
     print()
     print("📦 Scripts do Poetry:")

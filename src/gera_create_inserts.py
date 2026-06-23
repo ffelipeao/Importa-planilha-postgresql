@@ -1,4 +1,5 @@
 import os
+import argparse
 import pandas as pd
 import tkinter as tk
 from tkinter import filedialog
@@ -22,6 +23,32 @@ def detectar_codificacao(arquivo):
         dados = f.read()
         resultado = chardet.detect(dados)
         return resultado['encoding']
+
+
+def resolver_codificacao(codific):
+    """Converte atalho numérico ou nome de codificação para o valor usado na leitura do CSV."""
+    if codific == '1':
+        return 'utf-8'
+    if codific == '2':
+        return 'iso-8859-1'
+    if codific == '3':
+        return 'windows-1252'
+    return codific
+
+
+def perguntar_codificacao():
+    """Solicita ao usuário a codificação para leitura de arquivos CSV."""
+    print("\nCodificação para leitura de arquivos CSV:")
+    print("  1 - UTF-8 (padrão)")
+    print("  2 - ISO-8859-1 (Latin-1)")
+    print("  3 - Windows-1252")
+    print("  ou informe outro nome de codificação suportado pelo Python")
+    codific = input("Informe a opção (Enter para UTF-8): ").strip()
+    if not codific:
+        codific = '1'
+    codificacao = resolver_codificacao(codific)
+    print(f'Codificação selecionada: {codificacao}')
+    return codificacao
 
 
 #removido em 20241130
@@ -53,25 +80,11 @@ def tratar_dado(dado):
 
 
 
-def gerar_sql(file_list,nome_schema):
+def gerar_sql(file_list, nome_schema, codificacao='utf-8'):
 
     for nome_arquivo in file_list:
         try:
             print('Preparando dados do arquivo:', nome_arquivo)
-            # Detectar a codificação do arquivo
-            # codificacao = detectar_codificacao(nome_arquivo)
-            # Fixar codificacao (utf-8, iso-8859-1 (Latin-1), windows-1252)
-            # codificacao = 'iso-8859-1'
-            # codific = input("Informe a codificacao (Ex.: 1- utf-8;  2- iso-8859-1 (Latin-1); 3- windows-1252): ")
-            codific = '1'
-            if codific == '1':
-                codificacao = 'utf-8'
-            elif codific == '2':
-                codificacao = 'iso-8859-1'
-            elif codific == '3':
-                codificacao = 'windows-1252'
-            else:
-                codificacao = codific
             print('Codificação selecionada:', codificacao)
 
             print('Carregando dados na memória (df).')
@@ -152,6 +165,45 @@ def gerar_sql(file_list,nome_schema):
 
 def main():
     """Função principal para gerar CREATE e INSERTs"""
+    parser = argparse.ArgumentParser(
+        description="Gera scripts SQL (CREATE TABLE + INSERT) a partir de planilhas Excel ou CSV",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Exemplos de uso:
+  python gera_create_inserts.py                              # Seleção interativa (UTF-8)
+  python gera_create_inserts.py --codificacao utf-8          # CSV em UTF-8
+  python gera_create_inserts.py -c 2                         # CSV em ISO-8859-1 (Latin-1)
+  python gera_create_inserts.py -c windows-1252              # CSV em Windows-1252
+
+Codificações aceitas:
+  1 ou utf-8          UTF-8 (padrão)
+  2 ou iso-8859-1     ISO-8859-1 (Latin-1)
+  3 ou windows-1252   Windows-1252
+  ou qualquer nome de codificação suportado pelo Python
+        """
+    )
+
+    parser.add_argument(
+        '-c', '--codificacao',
+        type=str,
+        default='utf-8',
+        metavar='CODIFICACAO',
+        help='Codificação para leitura de arquivos CSV (padrão: utf-8). '
+             'Atalhos: 1=utf-8, 2=iso-8859-1, 3=windows-1252'
+    )
+
+    parser.add_argument(
+        '--perguntar-codificacao',
+        action='store_true',
+        help='Solicita interativamente a codificação dos arquivos CSV'
+    )
+
+    args = parser.parse_args()
+    if args.perguntar_codificacao:
+        codificacao = perguntar_codificacao()
+    else:
+        codificacao = resolver_codificacao(args.codificacao)
+
     # Registra o horário de início
     hora_inicio = datetime.datetime.now()
     print("Hora inicial:", hora_inicio.strftime("%Y-%m-%d %H:%M:%S"))
@@ -173,7 +225,7 @@ def main():
         print('Gerando dados para o schema:', nome_schema)
 
         # Chame a função para gerar o arquivo SQL
-        gerar_sql(list(file_list),nome_schema)
+        gerar_sql(list(file_list), nome_schema, codificacao)
 
         print('Gerado com sucesso!!!')
         # Registra o horário de término

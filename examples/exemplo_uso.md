@@ -62,6 +62,8 @@ poetry run importa-planilha
 ```bash
 poetry run python src/carrega_metadados.py
 poetry run python src/gera_create_inserts.py
+poetry run python src/gera_create_inserts.py -c iso-8859-1   # CSV em Latin-1
+poetry run python src/gera_create_inserts.py --help
 # ou
 poetry run carrega-metadados
 poetry run gera-create-inserts

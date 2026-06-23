@@ -242,11 +242,11 @@ Os arquivos são gravados em `backup_bd_flonaca/` (nome com data e hora). É nec
 ```bash
 # Usando Poetry
 poetry run python src/main.py
-# Escolha opção 2 no menu
+# Escolha opção 2 no menu (será solicitada a codificação para arquivos CSV)
 
 # Usando pip
 python src/main.py
-# Escolha opção 2 no menu
+# Escolha opção 2 no menu (será solicitada a codificação para arquivos CSV)
 ```
 
 **Método 2: Execução direta**
@@ -257,6 +257,26 @@ poetry run python src/gera_create_inserts.py
 # Usando pip
 python src/gera_create_inserts.py
 ```
+
+**Codificação de arquivos CSV** (não se aplica a `.xlsx`):
+
+Por padrão, arquivos CSV são lidos em UTF-8. Para planilhas em outra codificação, informe o argumento `--codificacao` (ou `-c`):
+
+```bash
+# UTF-8 (padrão)
+poetry run python src/gera_create_inserts.py --codificacao utf-8
+
+# ISO-8859-1 (Latin-1) — atalho numérico 2
+poetry run python src/gera_create_inserts.py -c 2
+
+# Windows-1252
+poetry run python src/gera_create_inserts.py -c windows-1252
+
+# Ver todas as opções
+poetry run python src/gera_create_inserts.py --help
+```
+
+Atalhos aceitos: `1` ou `utf-8`, `2` ou `iso-8859-1`, `3` ou `windows-1252`, ou qualquer nome de codificação suportado pelo Python.
 
 ### 📝 Gerenciar Metadados de Tabelas
 
