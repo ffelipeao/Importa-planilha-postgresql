@@ -718,6 +718,22 @@ def gerar_insert_sql(
     return insert_sql.rstrip(',\n') + ';'
 
 
+def escrever_arquivo_sql(caminho_arquivo: str, conteudo: str) -> bool:
+    """Grava o arquivo SQL, substituindo o conteúdo caso o arquivo já exista."""
+    pasta_destino = os.path.dirname(caminho_arquivo)
+    if pasta_destino:
+        os.makedirs(pasta_destino, exist_ok=True)
+
+    arquivo_existia = os.path.exists(caminho_arquivo)
+    if arquivo_existia:
+        print(f'Arquivo existente encontrado: {caminho_arquivo} — será substituído.')
+
+    with open(caminho_arquivo, 'w', encoding='utf-8') as sql_file:
+        sql_file.write(conteudo)
+
+    return arquivo_existia
+
+
 def gerar_sql(
     file_list,
     nome_schema,
@@ -775,12 +791,14 @@ def gerar_sql(
             )
 
             print("Escrevendo arquivo .sql")
-            os.makedirs('sql', exist_ok=True)
-            with open(f'sql/{nome_tabela}.sql', 'w', encoding='utf-8') as sql_file:
-                sql_file.write(create_sql + '\n')
-                sql_file.write(insert_sql)
+            caminho_sql = f'sql/{nome_tabela}.sql'
+            conteudo_sql = create_sql + '\n' + insert_sql
+            arquivo_substituido = escrever_arquivo_sql(caminho_sql, conteudo_sql)
 
-            print(f'O arquvo SQL "{nome_tabela}.sql" foi criado com sucesso para {nome_arquivo}.')
+            if arquivo_substituido:
+                print(f'O arquivo SQL "{nome_tabela}.sql" foi substituído com sucesso para {nome_arquivo}.')
+            else:
+                print(f'O arquivo SQL "{nome_tabela}.sql" foi criado com sucesso para {nome_arquivo}.')
 
             print('###' * 50)
             print('###' * 15, "Inserindo no Banco de dados", '###' * 15)
