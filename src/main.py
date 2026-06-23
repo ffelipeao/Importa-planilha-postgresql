@@ -41,11 +41,18 @@ def executar_gera_sql():
     print("Esta função converte planilhas em scripts SQL completos")
     print("Cria arquivos CREATE TABLE e INSERT prontos para execução")
     print("Para arquivos CSV, será solicitada a codificação de leitura")
+    print("Também será possível escolher entre text ou inferência automática de tipos")
+    print("O schema PostgreSQL de destino também será solicitado")
     print()
     
     try:
         subprocess.run(
-            [sys.executable, "src/gera_create_inserts.py", "--perguntar-codificacao"],
+            [
+                sys.executable,
+                "src/gera_create_inserts.py",
+                "--perguntar-codificacao",
+                "--perguntar-tipos",
+            ],
             check=True,
         )
     except subprocess.CalledProcessError:
