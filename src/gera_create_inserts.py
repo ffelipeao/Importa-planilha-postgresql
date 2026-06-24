@@ -131,7 +131,7 @@ def perguntar_validacao_completa():
     """Solicita se a inferência deve validar todas as colunas em todas as linhas."""
     print("\nValidação de tipos inferidos:")
     print("  1 - Rápida: amostra na memória + ajuste de VARCHAR (padrão, mais rápida)")
-    print("  2 - Completa: analisar todas as colunas em todas as linhas (pode ser mais lenta)")
+    print("  2 - Completa: uma passagem por todas as colunas e linhas (mais segura)")
     opcao = input("Informe a opção (Enter para rápida): ").strip()
     completa = opcao == '2'
     modo = 'validação completa' if completa else 'validação rápida'
@@ -536,21 +536,95 @@ def calcular_tipo_cadeia_por_tamanho(tamanho_maximo: int) -> str:
     return f'varchar({tamanho})'
 
 
-def inferir_tipo_coluna_completo(df: pd.DataFrame, nome_coluna: str) -> str:
-    """Inferência com saída antecipada: > limite de caracteres vira text imediatamente."""
-    if nome_coluna not in df.columns:
-        return inferir_varchar([])
+class EstadoInferenciaColuna:
+    """Acumula estatísticas de uma coluna em uma única passagem pelos dados."""
 
-    valores_validos = []
-    for valor in df[nome_coluna]:
-        if valor_vazio(valor):
-            continue
+    def __init__(self, nome_coluna: str):
+        self.nome_coluna = nome_coluna
+        self.texto_longo = False
+        self.tamanho_maximo = 0
+        self.categorias: Set[CategoriaValor] = set()
+        self.quantidade_validos = 0
+        self.tem_texto_nao_numerico = False
+        self.exige_bigint = False
+        self.textos_validos: Set[str] = set()
+
+    def processar_valor(self, valor) -> None:
+        if self.texto_longo or valor_vazio(valor):
+            return
+
         texto = valor_para_texto(valor)
-        if len(texto) > LIMITE_CARACTERES_TEXTO:
-            return 'text'
-        valores_validos.append(valor)
+        tamanho = len(texto)
+        if tamanho > LIMITE_CARACTERES_TEXTO:
+            self.texto_longo = True
+            return
 
-    return inferir_tipo_coluna(nome_coluna, valores_validos)
+        self.quantidade_validos += 1
+        if tamanho > self.tamanho_maximo:
+            self.tamanho_maximo = tamanho
+
+        if isinstance(valor, (int, float)) and not isinstance(valor, bool):
+            if isinstance(valor, int):
+                if valor < INT32_MIN or valor > INT32_MAX:
+                    self.exige_bigint = True
+            elif valor.is_integer():
+                numero = int(valor)
+                if numero < INT32_MIN or numero > INT32_MAX:
+                    self.exige_bigint = True
+        elif not (corresponde_inteiro(texto) or corresponde_decimal(texto)):
+            self.tem_texto_nao_numerico = True
+        elif corresponde_inteiro(texto):
+            try:
+                numero = int(texto)
+                if numero < INT32_MIN or numero > INT32_MAX:
+                    self.exige_bigint = True
+            except (ValueError, OverflowError):
+                self.tem_texto_nao_numerico = True
+
+        self.categorias.add(classificar_valor(valor))
+        self.textos_validos.add(texto.lower())
+
+    def concluida(self) -> bool:
+        return self.texto_longo
+
+
+def finalizar_tipo_coluna(estado: EstadoInferenciaColuna) -> str:
+    """Define o tipo PostgreSQL a partir do estado acumulado da coluna."""
+    if estado.texto_longo:
+        return 'text'
+    if estado.quantidade_validos == 0:
+        return calcular_tipo_cadeia_por_tamanho(0)
+
+    if coluna_exige_integer_por_nome(estado.nome_coluna):
+        if not estado.tem_texto_nao_numerico and estado.categorias == {CategoriaValor.INTEIRO}:
+            return 'bigint' if estado.exige_bigint else 'integer'
+
+    categorias = set(estado.categorias)
+    if CategoriaValor.BOOLEANO in categorias:
+        if not estado.textos_validos.issubset(VALORES_BOOLEANOS):
+            categorias.discard(CategoriaValor.BOOLEANO)
+            if not categorias:
+                return calcular_tipo_cadeia_por_tamanho(estado.tamanho_maximo)
+
+    tipo = combinar_categorias(categorias)
+    if tipo == 'integer':
+        return 'bigint' if estado.exige_bigint else 'integer'
+    if tipo == 'varchar':
+        return calcular_tipo_cadeia_por_tamanho(estado.tamanho_maximo)
+    return tipo
+
+
+def inferir_tipo_coluna_completo(df: pd.DataFrame, nome_coluna: str) -> str:
+    """Inferência de uma coluna com saída antecipada para valores longos."""
+    if nome_coluna not in df.columns:
+        return calcular_tipo_cadeia_por_tamanho(0)
+
+    estado = EstadoInferenciaColuna(nome_coluna)
+    for valor in df[nome_coluna].to_numpy():
+        estado.processar_valor(valor)
+        if estado.concluida():
+            break
+    return finalizar_tipo_coluna(estado)
 
 
 def ajustar_tipos_pelo_dataset_completo(
@@ -601,12 +675,30 @@ def validar_tipos_pelo_dataset_completo(
     colunas: Sequence[str],
     tipos_referencia: Optional[Dict[str, str]] = None,
 ) -> Dict[str, str]:
-    """Reinfere tipos de todas as colunas usando todas as linhas do arquivo."""
+    """Reinfere tipos de todas as colunas em uma única passagem pelas linhas."""
+    colunas_analise = [coluna for coluna in colunas if coluna in df.columns]
+    estados = {coluna: EstadoInferenciaColuna(coluna) for coluna in colunas_analise}
+    total_linhas = len(df)
     total_colunas = len(colunas)
-    tipos_validados = {}
 
+    if colunas_analise:
+        for indice_linha, linha in enumerate(df[colunas_analise].to_numpy(), start=1):
+            for indice_coluna, valor in enumerate(linha):
+                estado = estados[colunas_analise[indice_coluna]]
+                if not estado.concluida():
+                    estado.processar_valor(valor)
+
+            if total_linhas >= 1000 and indice_linha % 1000 == 0:
+                print(f'  Progresso: {indice_linha}/{total_linhas} linhas analisadas')
+
+    tipos_validados = {}
     for indice, coluna in enumerate(colunas, start=1):
-        tipo_novo = inferir_tipo_coluna_completo(df, coluna)
+        estado = estados.get(coluna)
+        if estado is None:
+            tipo_novo = calcular_tipo_cadeia_por_tamanho(0)
+        else:
+            tipo_novo = finalizar_tipo_coluna(estado)
+
         tipo_anterior = tipos_referencia.get(coluna) if tipos_referencia else None
         if tipo_anterior and tipo_anterior != tipo_novo:
             print(f'  - {coluna}: {tipo_anterior} -> {tipo_novo}')
@@ -890,7 +982,7 @@ def gerar_sql(
                 if validacao_completa:
                     print(
                         'Modo de tipos: inferência com validação completa '
-                        '(todas as colunas e linhas — pode ser mais lenta)'
+                        '(uma passagem por todas as colunas e linhas)'
                     )
                 else:
                     print(
@@ -924,8 +1016,7 @@ def gerar_sql(
 
             if inferir_tipos and validacao_completa:
                 print(
-                    'Validação completa de tipos em todas as colunas '
-                    '(pode ser mais lenta)...'
+                    'Validação completa de tipos (uma passagem pelo arquivo)...'
                 )
                 tipos_colunas = validar_tipos_pelo_dataset_completo(df, colunas, tipos_colunas)
                 print('Tipos finais para CREATE TABLE:')
