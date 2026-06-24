@@ -5,4 +5,4 @@
 -r requirements.txt
 
 # Dependências específicas para desenvolvimento
-# (adicione aqui dependências como pytest, black, flake8, etc. se necessário)
+pytest = ">=7.0.0"
