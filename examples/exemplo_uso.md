@@ -77,7 +77,7 @@ poetry run python src/exporta_backup_bd.py
 poetry run exporta-backup-bd
 ```
 
-Dumps em `backup_bd_flonaca/`; arquivos com mais de 15 dias são removidos automaticamente.
+Dumps em `backup_bd_flonaca/`; mantém os 5 mais recentes e remove excedentes.
 
 ## 🔧 Ferramentas auxiliares
 

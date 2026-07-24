@@ -1,13 +1,13 @@
 """
 Script para exportar dump do PostgreSQL e gerenciar backups locais.
 Usa a classe ConexaoBanco para obter as credenciais e pg_dump para o backup.
-Backups salvos em backup_bd_flonaca/; backups com mais de 15 dias são removidos.
+Backups salvos em backup_bd_flonaca/; mantém os 5 mais recentes e remove excedentes.
 """
 
 import os
 import subprocess
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from dotenv import load_dotenv, find_dotenv
 
@@ -15,6 +15,7 @@ from conexao import ConexaoBanco
 
 
 PASTA_BACKUP = "backup_bd_flonaca"
+MAX_BACKUPS_MANTER = 5
 
 
 def obter_credenciais():
@@ -88,10 +89,11 @@ def exportar_dump():
         return None
 
 
-def validar_e_limpar_backups_antigos(dias=15):
+def validar_e_limpar_backups_antigos(max_manter=MAX_BACKUPS_MANTER):
     """
-    Valida a data dos backups na pasta backup_bd_flonaca e remove
-    os arquivos com mais de `dias` dias.
+    Remove backups excedentes na pasta backup_bd_flonaca somente quando há
+    mais de `max_manter` arquivos. Os `max_manter` mais recentes são sempre
+    preservados, independentemente da idade.
     Retorna a quantidade de arquivos removidos.
     """
     pasta = Path(PASTA_BACKUP)
@@ -99,26 +101,30 @@ def validar_e_limpar_backups_antigos(dias=15):
         print(f"Pasta {PASTA_BACKUP} não existe. Nada a limpar.")
         return 0
 
-    limite = datetime.now() - timedelta(days=dias)
-    removidos = 0
+    arquivos = sorted(
+        (f for f in pasta.glob("*.dump") if f.is_file()),
+        key=lambda f: f.stat().st_mtime,
+        reverse=True,
+    )
 
-    for arquivo in pasta.glob("*.dump"):
-        if not arquivo.is_file():
-            continue
+    if len(arquivos) <= max_manter:
+        print(
+            f"{len(arquivos)} backup(s) na pasta "
+            f"(máximo {max_manter} sem remoção). Nenhum arquivo removido."
+        )
+        return 0
+
+    removidos = 0
+    for arquivo in arquivos[max_manter:]:
         try:
             mtime = datetime.fromtimestamp(arquivo.stat().st_mtime)
-            if mtime < limite:
-                arquivo.unlink()
-                print(f"Backup antigo removido ({mtime.date()}): {arquivo.name}")
-                removidos += 1
+            arquivo.unlink()
+            print(f"Backup excedente removido ({mtime.date()}): {arquivo.name}")
+            removidos += 1
         except OSError as e:
             print(f"Erro ao processar {arquivo.name}: {e}")
 
-    if removidos == 0:
-        print(f"Nenhum backup com mais de {dias} dias encontrado.")
-    else:
-        print(f"Total de backups removidos: {removidos}")
-
+    print(f"Total de backups removidos: {removidos}")
     return removidos
 
 
@@ -126,8 +132,11 @@ def main():
     """Ponto de entrada para CLI e para `poetry run exporta-backup-bd`."""
     print("Iniciando exportação do dump...")
     exportar_dump()
-    print("\nVerificando backups antigos (mais de 15 dias)...")
-    validar_e_limpar_backups_antigos(15)
+    print(
+        f"\nVerificando backups excedentes "
+        f"(mantendo os {MAX_BACKUPS_MANTER} mais recentes)..."
+    )
+    validar_e_limpar_backups_antigos()
     return 0
 
 

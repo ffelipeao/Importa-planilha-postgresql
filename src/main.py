@@ -67,7 +67,10 @@ def executar_exporta_backup():
     print("\n💾 EXPORTAR BACKUP DO BANCO DE DADOS")
     print("-" * 40)
     print("Gera um arquivo .dump (pg_dump -Fc) em backup_bd_flonaca/")
-    print("e remove backups com mais de 15 dias na mesma pasta.")
+    print(
+        "e remove backups excedentes na mesma pasta "
+        "(mantém sempre os 5 mais recentes)."
+    )
     print()
     try:
         subprocess.run([sys.executable, "src/exporta_backup_bd.py"], check=True)

@@ -1,0 +1,54 @@
+---
+description: Sugerir mensagem de commit padronizada no chat após alterações no código
+alwaysApply: true
+---
+
+# Sugestão de commit no chat
+
+Ao **concluir uma tarefa que alterou arquivos do repositório**, encerre a resposta com a seção abaixo.
+
+Não executar `git commit` a menos que o usuário peça explicitamente.
+
+## Quando incluir
+
+Incluir a seção quando houver alteração em código, config, testes, migrations, views ou scripts versionados.
+
+Não incluir quando a resposta for apenas explicação, revisão ou pergunta, sem edição de arquivos.
+
+## Formato obrigatório
+
+Use exatamente este bloco no final da resposta:
+
+```markdown
+## Sugestão de commit
+
+\`\`\`
+<tipo>(<escopo>): <resumo em uma linha>
+
+- <bullet 1: o que mudou e por quê>
+- <bullet 2>
+\`\`\`
+```
+
+## Regras de redação
+
+- Idioma: **português do Brasil**
+- `<tipo>`: `feat`, `fix`, `refactor`, `test`, `docs`, `chore` ou `style`
+- `<escopo>`: módulo ou área afetada (ex.: `qualidade-dados`, `auth`, `uc`)
+- Resumo: imperativo, claro, sem ponto final, máx. ~72 caracteres
+- Bullets: 2–5 itens objetivos; mencionar arquivos/rotas só quando relevante
+- Foco no **porquê** e no impacto, não em listar cada linha alterada
+
+## Exemplo
+
+```markdown
+## Sugestão de commit
+
+\`\`\`
+feat(qualidade-dados): adicionar tela de detalhe para possíveis duplicidades
+
+- Nova rota GET /qualidade-dados/{check}/detalhe para espécimes do grupo
+- Botão "Ver registros" substitui "Editar UC" em verificações agregadas
+- Testes unitários para geração da URL de detalhe
+\`\`\`
+```

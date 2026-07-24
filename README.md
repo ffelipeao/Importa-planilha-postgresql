@@ -117,7 +117,7 @@ python src/exporta_backup_bd.py
 
 **6. Backup do banco de dados**
 - Exporta dump em formato customizado (`pg_dump -Fc`) para a pasta `backup_bd_flonaca/`
-- Remove automaticamente arquivos de backup locais com mais de 15 dias
+- Mantém os 5 backups mais recentes; remove excedentes quando houver mais de 5 arquivos
 - Requer `pg_dump` no `PATH` (cliente PostgreSQL instalado)
 
 ## 🗂️ Estrutura do Projeto
