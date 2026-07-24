@@ -1,0 +1,27 @@
+---
+description: Sugerir mensagem de commit padronizada após alterações no repositório
+alwaysApply: true
+---
+
+# Sugestão de commit
+
+Ao concluir tarefa com **edição de arquivos versionados**, encerre com a seção abaixo.  
+Não executar `git commit` sem pedido explícito. Detalhes e exemplo completo: [AGENTS.md](AGENTS.md) (seção *Sugestão de commit*).
+
+Não incluir se a resposta foi só explicação/revisão, sem alteração de arquivos.
+
+## Formato
+
+```markdown
+## Sugestão de commit
+
+\`\`\`
+<tipo>(<escopo>): <resumo em uma linha>
+
+- <bullet: o que mudou e por quê>
+- <bullet>
+\`\`\`
+```
+
+- Idioma: português do Brasil; tipos: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `style`
+- Resumo imperativo, ~72 caracteres; 2–5 bullets com foco no impacto

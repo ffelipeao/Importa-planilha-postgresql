@@ -1,0 +1,15 @@
+---
+description: Convenções Python para src e testes
+globs: "**/*.py"
+alwaysApply: false
+---
+
+# Python neste repositório
+
+- Código em `src/`; testes em `tests/` com pytest e fixtures em `conftest.py`.
+- Imports entre módulos de `src/`: sem prefixo `src.` (ex.: `from conexao import ConexaoBanco`).
+- Novos entrypoints CLI: registrar em `[tool.poetry.scripts]` no `pyproject.toml` quando fizer sentido.
+- Credenciais via `.env` e `ConexaoBanco`; não hardcodar segredos.
+- Comportamento novo em `sql_generator/`: cobrir com testes em `tests/test_*.py` quando aplicável.
+
+Detalhes: [AGENTS.md](AGENTS.md).

@@ -151,6 +151,8 @@ Importa-planilha-postgresql/
 ├── .env                   # Sua configuração local
 ├── .env.example           # Exemplo de configuração
 ├── .gitignore             # Arquivos ignorados pelo Git
+├── AGENTS.md              # Instruções para agentes de IA (fonte canônica)
+├── .agents/               # Regras e config portátil para agentes (.mdc)
 ├── requirements.txt       # Dependências para pip
 ├── requirements-dev.txt   # Dependências de desenvolvimento
 ├── README.md              # Documentação completa

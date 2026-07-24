@@ -1,0 +1,17 @@
+---
+description: Contexto do repositório e políticas gerais para agentes
+alwaysApply: true
+---
+
+# Projeto
+
+Importação de planilhas para PostgreSQL, metadados, geração SQL (`src/sql_generator/`), geoespacial e backup (`exporta_backup_bd`). Stack: Python 3.8+, Poetry, pandas, psycopg2, pytest.
+
+**Leia [AGENTS.md](AGENTS.md) na raiz** antes de tarefas não triviais (comandos, estrutura, git, commits).
+
+## Obrigatório
+
+- Respostas ao usuário em **português do Brasil**.
+- **Escopo mínimo**; seguir convenções dos arquivos tocados.
+- **Não** `git commit` / `git push` sem pedido explícito; não commitar `.env`.
+- Testes: `poetry run pytest` (`pythonpath` = `src`).
